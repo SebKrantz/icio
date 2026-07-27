@@ -76,8 +76,14 @@ for a detailed walk-through.
 
 ## Related
 
+- [`icio`](https://www.tradeconomics.com/icio/) (Stata) — the reference
+  implementation of the Borin-Mancini decompositions, by Belotti, Borin
+  & Mancini (2021), and the origin of this package’s name.
+  [`bm()`](https://sebkrantz.github.io/icio/reference/bm.md) reproduces
+  its output; its `perspective()` and `approach()` options map onto the
+  arguments of the same name here.
 - [GlobalValueChains.jl](https://github.com/SebKrantz/GlobalValueChains.jl)
-  — the Julia counterpart;
+  (Julia) — the counterpart to this package;
   [`bm()`](https://sebkrantz.github.io/icio/reference/bm.md) mirrors its
   [`decompose()`](https://rdrr.io/r/stats/decompose.html).
 - **icio** is derived from the CRAN package
