@@ -230,6 +230,8 @@ bm <- function(x,
 
 # directly-absorbed exports DAE and absorbed-abroad exports VAXE (GN x G), exporter/source
 .bm_dae_vaxe <- function(P) {
+  # NULL-initialised so R CMD check does not flag the list2env() locals as globals
+  Am <- Wcol <- BFD <- X <- Ym <- G <- blk <- idiag <- NULL
   list2env(P, environment())
   DAE  <- Ym
   VAXE <- Ym
@@ -246,6 +248,8 @@ bm <- function(x,
 ## Engine: exporter / source (13 terms), country / sector / bilateral
 ## ------------------------------------------------------------------------------------------------
 .bm_source <- function(P, aggregation) {
+  # NULL-initialised so R CMD check does not flag the list2env() locals as globals
+  ESR <- VBdom <- VBfor <- VLdom <- fvacoef <- G <- N <- GN <- k <- i <- ctryvec <- NULL
   list2env(P, environment())
   ord13 <- c("GEXP","DC","DVA","VAX","DAVAX","REF","DDC","FC","FVA","FDC","GVC","GVCB","GVCF")
 
@@ -293,6 +297,8 @@ bm <- function(x,
 
 # sector-level source terms as a named list of GN-length vectors (13 terms)
 .bm_source_sec <- function(P) {
+  # NULL-initialised so R CMD check does not flag the list2env() locals as globals
+  E <- VBdom <- VBfor <- VLdom <- fvacoef <- NULL
   list2env(P, environment())
   dv <- .bm_dae_vaxe(P); DAE <- dv$DAE; VAXE <- dv$VAXE
   GEXP  <- E
@@ -317,6 +323,8 @@ bm <- function(x,
 ## FVA/FDC change with the world approach (Borin & Mancini 2019, eq. 52 source / eq. 54 sink).
 ## ------------------------------------------------------------------------------------------------
 .bm_world <- function(P, approach) {
+  # NULL-initialised so R CMD check does not flag the list2env() locals as globals
+  A <- Am <- B <- Lb <- Vc <- E <- Ym <- Wcol <- VBfor <- VLdom <- G <- GN <- k <- blk <- ctryvec <- idiag <- NULL
   list2env(P, environment())
   sec <- .bm_source_sec(P)
   agg <- function(v) rowsum(v, ctryvec, reorder = FALSE)[, 1L]
@@ -363,6 +371,8 @@ bm <- function(x,
 ## Same country perimeter as source; VA recorded the last time it leaves s. DC/FC match source.
 ## ------------------------------------------------------------------------------------------------
 .bm_sink <- function(P, aggregation) {
+  # NULL-initialised so R CMD check does not flag the list2env() locals as globals
+  A <- B <- Lb <- E <- ESR <- X <- Y <- BFD <- VBdom <- VBfor <- G <- N <- GN <- k <- i <- IN <- blk <- ctryvec <- NULL
   list2env(P, environment())
   ABFD <- A %*% BFD
   Yrow <- rowSums2(Y)                                    # GN
@@ -449,6 +459,8 @@ bm <- function(x,
 ## FVA* = VBfor/(1+a) e; VAX* = (DVA*/e) VAXE (perimeter-invariant reflection share). 9 terms.
 ## ------------------------------------------------------------------------------------------------
 .bm_self <- function(P, aggregation) {
+  # NULL-initialised so R CMD check does not flag the list2env() locals as globals
+  A <- B <- E <- ESR <- X <- Y <- BFD <- VBdom <- VBfor <- G <- N <- GN <- k <- i <- IN <- blk <- ctryvec <- NULL
   list2env(P, environment())
 
   if(aggregation == "sector") {
@@ -520,6 +532,8 @@ bm <- function(x,
 ## and bilateral (va/dc by value-added origin). Column-block Woodbury update of B per importer.
 ## ------------------------------------------------------------------------------------------------
 .bm_imports <- function(P, aggregation) {
+  # NULL-initialised so R CMD check does not flag the list2env() locals as globals
+  A <- B <- ESR <- Vc <- G <- GN <- k <- IN <- blk <- NULL
   list2env(P, environment())
   BESR <- B %*% ESR                                     # GN x G, BESR[,r] = B d^r
   va <- matrix(0, GN, G); dc <- matrix(0, GN, G)
