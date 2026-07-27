@@ -17,3 +17,5 @@ kww_experimental.R
 ^_pkgdown\.yml$
 ^pkgdown$
 ^docs$
+
+^CLAUDE\.md$
