@@ -1,5 +1,5 @@
 ---
-title: "Global Value Chain Decomposition with decompr"
+title: "Global Value Chain Decomposition with icio"
 author: "Sebastian Krantz"
 date: "`r Sys.Date()`"
 output:
@@ -7,7 +7,7 @@ output:
     toc: true
     toc_depth: 2
 vignette: >
-  %\VignetteIndexEntry{decompr}
+  %\VignetteIndexEntry{Global Value Chain Decomposition with icio}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 options(width = 90)
 ```
 
-**decompr** implements four gross-export decompositions from the Global Value Chain (GVC)
+**icio** implements four gross-export decompositions from the Global Value Chain (GVC)
 literature. All decompositions operate on an inter-country input-output (ICIO) table and
 answer the question: *where does the value added embodied in a country's exports
 ultimately originate?*
@@ -42,7 +42,7 @@ The package ships with `leather`, a minimal 3-country × 3-industry ICIO table c
 the leather GVC for Argentina, Turkey, and Germany.
 
 ```{r data}
-library(decompr)
+library(icio)
 data(leather)
 
 leather$countries
@@ -55,24 +55,32 @@ leather$inter
 leather$final
 
 # Gross output vector (length 9)
-leather$output
+leather$out
 ```
 
 The rows and columns of `inter` and the rows of `final` are ordered by country first,
 then industry — 9 country-industry combinations in total.
 
-## Building a `decompr` object
+## Building an `icio` object
 
-`load_tables_vectors()` parses the raw ICIO matrices and pre-computes all quantities
-needed for the decompositions: the Leontief inverse `B`, its domestic (`Bd`) and
-foreign (`Bm`) parts, the domestic Leontief inverse `L`, value-added coefficients
-`Vc`, and export vectors `E`, `ESR`, `Eint`, `Efd`.
+`load_icio()` parses the raw ICIO matrices and pre-computes what the decompositions
+need: the input coefficients `A`, the Leontief inverse `B`, the `G` blocks `Lb` of the
+domestic Leontief inverse, value-added coefficients `Vc`, final demand (`Y`, `Yd`, `Ym`)
+and exports (`E`, `ESR`). Only `A` and `B` are dense `GN x GN` matrices; the masked and
+block-diagonal variants the decompositions use are derived on the fly.
+
+Inverting `(I - A)` is by far the most expensive step, so build the object once and reuse
+it across decompositions.
 
 ```{r load}
-x <- load_tables_vectors(leather)
+x <- load_icio(leather)
 class(x)
 names(x)
 ```
+
+An `iot`-class list like `leather` is detected automatically; equivalently you can pass the
+matrices directly as `load_icio(inter, final, countries, industries)`. Tables in the CSV
+format of the Stata `icio` command are read with `load_icio_csv()`.
 
 The key scalars:
 
@@ -134,7 +142,7 @@ dim(wz)
 names(wz)
 ```
 
-The result is a long-format data frame with one row per (exporting country-industry,
+The result is a long-format `data.table` with one row per (exporting country-industry,
 importing country) pair and one column per term, preceded by three identifier columns
 (`Exporting_Country`, `Exporting_Industry`, `Importing_Country`). Columns beyond the
 16 decomposition terms are accounting diagnostics (`texp`, `texpint`, `texpfd`, etc.).
@@ -222,14 +230,27 @@ when the question is specifically about what crosses a particular bilateral bord
 
 ## Convenience interface
 
-`decomp()` is a single entry point for all methods. It accepts either a `decompr`
-object or a raw `iot` list:
+`decomp()` is a single entry point for all methods, dispatching on `method` (default
+`"bm"`) and passing `...` on to the decomposition function:
 
 ```{r decomp}
-# Pass the raw iot list — load_tables_vectors() is called internally
-decomp(leather, method = "leontief")
-decomp(leather, method = "bm")
+decomp(x, method = "leontief")
+decomp(x, aggregation = "sector")
 ```
+
+Given a list of `icio` objects — typically one ICIO table per year — it runs the
+decomposition on each and stacks the results, prepending an identifier column:
+
+```{r decomp-list}
+decomp(list(`2015` = x, `2016` = x), idcol = "Year")
+```
+
+## Output format
+
+All decompositions return a `data.table`, so column selection follows data.table rules:
+`d$GEXP` and `d[["GEXP"]]` work as usual, but `d[, "GEXP"]` returns a one-column table
+rather than a vector, and `d[c("GEXP", "DVA")]` is a join, not a column subset — use
+`d[, .(GEXP, DVA)]` or `as.data.frame(d)` if you want base-R semantics.
 
 ## References
 

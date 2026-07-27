@@ -3,10 +3,10 @@
 #' Decomposes gross exports (or imports) into value-added and Global Value Chain (GVC) components
 #' following the Borin and Mancini (2019) framework, as implemented in the Stata \code{icio}
 #' command (Belotti, Borin and Mancini 2021). It is the R counterpart of the \code{decompose()}
-#' function in the Julia package \code{GlobalValueChains.jl}, and operates on a \code{decompr}
-#' object created by \code{\link{load_tables_vectors}}.
+#' function in the Julia package \code{GlobalValueChains.jl}, and operates on an \code{icio}
+#' object created by \code{\link{load_icio}}.
 #'
-#' @param x an object of class \code{decompr} obtained from \code{\link{load_tables_vectors}}.
+#' @param x an object of class \code{icio} obtained from \code{\link{load_icio}}.
 #' @param aggregation character. The level of the decomposition:
 #'  \code{"country"} (one row per exporting/importing country), \code{"sector"} (one row per
 #'  exporting country-industry), or \code{"bilateral"} (one row per exporting country-industry
@@ -76,7 +76,7 @@
 #' the export flow itself, so \code{DVA} (there \eqn{DVA^\star}) is weakly larger than under either
 #' exporter approach.
 #'
-#' @return A \code{data.frame} with one row per unit and one column per value-added term,
+#' @return A \code{data.table} with one row per unit and one column per value-added term,
 #'  preceded by factor identifier columns: \code{Exporting_Country} (country exports);
 #'  \code{Exporting_Country, Exporting_Industry} (sector); \code{Exporting_Country,
 #'  Exporting_Industry, Importing_Country} (bilateral exports); \code{Importing_Country} (country
@@ -91,11 +91,11 @@
 #' Belotti, F., Borin, A. and Mancini, M. (2021). icio: Economic analysis with intercountry
 #' input-output tables. \emph{The Stata Journal, 21}(3), 708-755.
 #' @export
-#' @seealso \code{\link{kww}}, \code{\link{wwz}}, \code{\link{leontief}}, \code{\link{decompr-package}}
+#' @seealso \code{\link{kww}}, \code{\link{wwz}}, \code{\link{leontief}}, \code{\link{icio-package}}
 #' @examples
-#' # Load example data and create a 'decompr' object
+#' # Load example data and create an 'icio' object
 #' data(leather)
-#' dec <- load_tables_vectors(leather)
+#' dec <- load_icio(leather)
 #'
 #' # Country-level decomposition (exporter perspective, source approach; 13 terms)
 #' bm(dec)
@@ -116,8 +116,8 @@ bm <- function(x,
                approach    = c("source", "sink"),
                flow        = c("exports", "imports")) {
 
-  if(!inherits(x, "decompr"))
-    stop("x must be an object of class 'decompr' created by the load_tables_vectors() function.")
+  if(!inherits(x, "icio"))
+    stop("x must be an object of class 'icio' created by the load_icio() function.")
   aggregation <- match.arg(aggregation)
   perspective <- match.arg(perspective)
   approach    <- match.arg(approach)
@@ -158,7 +158,7 @@ bm <- function(x,
     }
   }
 
-  .bm_finalize(res$out, res$nr)
+  .bm_finalize(res$out)
 }
 
 
@@ -169,12 +169,11 @@ bm <- function(x,
 # factor column from integer codes
 .bm_fct <- function(codes, levels) structure(codes, levels = levels, class = "factor")
 
-# finalize a list of columns into a 'bm' data.frame
-.bm_finalize <- function(out, nr) {
+# finalize a list of columns into a 'bm' data.table
+.bm_finalize <- function(out) {
   out <- lapply(out, unname)
-  attr(out, "row.names") <- .set_row_names(nr)
-  class(out) <- "data.frame"
-  attr(out, "decomposition") <- "bm"
+  setDT(out)
+  setattr(out, "decomposition", "bm")
   out
 }
 

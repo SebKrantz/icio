@@ -1,4 +1,4 @@
 library(testthat)
-library(decompr)
+library(icio)
 
-test_check("decompr")
+test_check("icio")

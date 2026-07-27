@@ -1,17 +1,14 @@
 # load the package
-library(decompr)
+library(icio)
 
 # load test data
 data(leather)
 list2env(leather, environment())
 
+dec <- load_icio(leather)
+
 # WWZ decomposition
-w <- decomp(x = inter,
-            y = final,
-            k = countries,
-            i = industries,
-            o = out,
-            method = "wwz")
+w <- decomp(dec, method = "wwz")
 
 # define context
 context("output format")
@@ -22,49 +19,37 @@ test_that("output size matches", {
 })
 
 test_that("output format matches", {
-  expect_match(typeof(w[,5]), "double")
+  expect_match(typeof(w[[5]]), "double")
 })
 
 
 # test that verbose turns some messages on
 test_that("verbose computation 1/2",
-          expect_message(decomp(x=inter, y=final, k=countries, i=industries,
-                                o=out, method = "wwz", verbose = TRUE),
+          expect_message(decomp(dec, method = "wwz", verbose = TRUE),
                          "Starting decomposing the trade flow"))
 
 test_that("verbose computation 2/2",
-          expect_message(decomp(x=inter, y=final, k=countries, i=industries,
-                                o=out, method = "wwz", verbose = TRUE),
+          expect_message(decomp(dec, method = "wwz", verbose = TRUE),
                          "16/16, elapsed time:"))
 
 ##
-## Custom v
-## 
-context("custom v")
+## Custom va
+##
+context("custom va")
 
 va <- out - colSums(inter)
 
-## WWZ decomposition: specify v
-w.2 <- decomp(x = inter,
-              y = final,
-              k = countries,
-              i = industries,
-              o = out,
-              v = va,
+## WWZ decomposition: specify va
+w.2 <- decomp(load_icio(inter, final, countries, industries, output = out, va = va),
               method = "wwz")
 
-test_that("specifying v leaves output unchanged",
-          expect_identical(w.2, w))
+test_that("specifying va leaves output unchanged",
+          expect_equal(w.2, w))   # not identical(): each data.table has its own selfref
 
 
 ## WWZ decomposition: only argentina
 va[4:9] <- 0
-w.arg <- decomp(x = inter,
-                y = final,
-                k = countries,
-                i = industries,
-                o = out,
-                v = va,
+w.arg <- decomp(load_icio(inter, final, countries, industries, output = out, va = va),
                 method = "wwz")
 
 test_that("only argentina has positive numbers",
@@ -77,18 +62,12 @@ test_that("turkey and germany are 0",
 ## now we only care about the transport_equipment industry
 va <- out - colSums(inter)
 va[1:9 %% 3 != 0] <- 0
-w.transport <- decomp(x = inter,
-                      y = final,
-                      k = countries,
-                      i = industries,
-                      o = out,
-                      v = va,
+w.transport <- decomp(load_icio(inter, final, countries, industries, output = out, va = va),
                       method = "wwz")
 
-within.country <- w.transport[w.transport$Exporting_Country == w.transport$Importing_Country, "DVA_FIN"]
+within <- w.transport$Exporting_Country == w.transport$Importing_Country
 test_that("only within-country flows are 0",
-          expect_true(all(within.country == 0)))
+          expect_true(all(w.transport$DVA_FIN[within] == 0)))
 
-non_within.country <- w.transport[w.transport$Exporting_Country != w.transport$Importing_Country, "DVA_FIN"]
 test_that("all others should be greater than 0",
-          expect_true(all(non_within.country > 0)))
+          expect_true(all(w.transport$DVA_FIN[!within] > 0)))

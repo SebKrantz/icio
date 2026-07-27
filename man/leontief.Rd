@@ -7,7 +7,7 @@
 leontief(x, post = c("exports", "output", "final_demand", "none"), long = TRUE)
 }
 \arguments{
-\item{x}{an object of class decompr.}
+\item{x}{an object of class 'icio'.}
 
 \item{post}{post-multiply the value added multiplier matrix [\eqn{VB = V(I-A)^{-1}}] with something to deduce the value added origins thereof.
 The default is \code{"exports"} \eqn{VAE = V(I-A)^{-1}E}, where \eqn{E} is a diagonal matrix with exports along the diagonal yielding the 
@@ -18,7 +18,7 @@ Option \code{"final_demand"} computes value added origins of final demand by sou
 \item{long}{logical. Transform the output data into a long (tidy) data set or not, default is \code{TRUE}.}
 }
 \value{
-If \code{long = TRUE} a molten data frame containing the elements of the decomposed flows matrix in the final column, preceded by several identifier columns. 
+If \code{long = TRUE} a molten \code{data.table} containing the elements of the decomposed flows matrix in the final column, preceded by several identifier columns. 
 If \code{long = FALSE} the decomposed flows matrix is simply returned.
 }
 \description{
@@ -28,19 +28,19 @@ The Leontief decomposition of gross flows (exports, final demand, output) into t
 The Leontief decomposition is obtained by pre-multiplying the flow measure (e.g. exports) with 
 the value added multiplier matrix [\eqn{VB = V(I-A)^{-1}}], obtained by pre-multiplying the Leontief Inverse matrix [\eqn{B = (I-A)^{-1}}] with a diagonal matrix [\eqn{V}] containing the direct value added share in each industries output.
 
-\eqn{V} is obtained as \code{diag(v / o)} where \code{o} is total industry output. \code{v} is either supplied to \code{\link{load_tables_vectors}} or computed as \code{o - colSums(x)} with \code{x} the raw IO matrix. 
-If \code{o} is not supplied to \code{\link{load_tables_vectors}}, it is computed as \code{rowSums(x) + rowSums(y)} where \code{y} is the matrix of final demands. If both \code{o} and \code{v} are not supplied to \code{\link{load_tables_vectors}}, this is equivalent to computing \eqn{V} as \code{diag(1 - colSums(A))}, with \eqn{A} is the row-normalized IO matrix also used to compute the Leontief Inverse [\eqn{B}].
+\eqn{V} is obtained as \code{diag(v / o)} where \code{o} is total industry output. \code{v} is either supplied to \code{\link{load_icio}} or computed as \code{o - colSums(x)} with \code{x} the raw IO matrix. 
+If \code{o} is not supplied to \code{\link{load_icio}}, it is computed as \code{rowSums(x) + rowSums(y)} where \code{y} is the matrix of final demands. If both \code{o} and \code{v} are not supplied to \code{\link{load_icio}}, this is equivalent to computing \eqn{V} as \code{diag(1 - colSums(A))}, with \eqn{A} is the row-normalized IO matrix also used to compute the Leontief Inverse [\eqn{B}].
 }
 \examples{
 # Load example data
 data(leather)
 
-# Create intermediate object (class 'decompr')
-decompr_object <- load_tables_vectors(leather)
+# Create intermediate object (class 'icio')
+m <- load_icio(leather)
 
 # Perform the Leontief decomposition of each country-industries 
 # exports into their value added origins by country-industry
-leontief(decompr_object)
+leontief(m)
 }
 \references{
 Leontief, W. (Ed.). (1986). Input-output economics. \emph{Oxford University Press}.
@@ -50,7 +50,7 @@ Hummels, D., Ishii, J., & Yi, K. M. (2001). The nature and growth of vertical sp
 Wang, Zhi, Shang-Jin Wei, and Kunfu Zhu (2013). Quantifying international production sharing at the bilateral and sector levels (No. w19677). \emph{National Bureau of Economic Research}.
 }
 \seealso{
-\code{\link{bm}}, \code{\link{kww}}, \code{\link{wwz}}, \code{\link{decompr-package}}
+\code{\link{bm}}, \code{\link{kww}}, \code{\link{wwz}}, \code{\link{icio-package}}
 }
 \author{
 Bastiaan Quast

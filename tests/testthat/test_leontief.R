@@ -5,14 +5,11 @@ context("leontief")
 data(leather)
 list2env(leather, environment())
 
+dec <- load_icio(leather)
+
 # leontief decomposition
-# n.b. using default method (Leontief)
 # with default post-multiplication (exports)
-l <- decomp(x = inter,
-            y = final,
-            k = countries,
-            i = industries,
-            o = out)
+l <- decomp(dec, method = "leontief")
 
 # test output format (i.e. structure not numbers)
 test_that("output size matches", {
@@ -21,26 +18,20 @@ test_that("output size matches", {
 })
 
 test_that("output format matches", {
-  expect_match( typeof(l[,5]), "double" )
+  expect_match( typeof(l[[5]]), "double" )
 })
 
 # test output content (i.e. numbers)
 test_that("output matches", {
-  expect_equal( l[1, 5],  28.52278, tolerance = .002 )
-  expect_equal( l[81, 5], 34.74381, tolerance = .002 )
+  expect_equal( l[[5]][1],  28.52278, tolerance = .002 )
+  expect_equal( l[[5]][81], 34.74381, tolerance = .002 )
 })
 
 
 context("leontief-output")
 
 # leontief decomposition
-lo <- decomp(x = inter,
-             y = final,
-             k = countries,
-             i = industries,
-             o = out,
-             method = "leontief",
-             post = "output")
+lo <- decomp(dec, method = "leontief", post = "output")
 
 test_that("output size matches", {
   expect_equal( length(lo), 5 )
@@ -48,26 +39,20 @@ test_that("output size matches", {
 })
 
 test_that("output format matches", {
-  expect_match(typeof( lo[,5]), "double" )
+  expect_match(typeof( lo[[5]]), "double" )
 })
 
 # test output content (i.e. numbers)
 test_that("output matches", {
-  expect_equal( lo[1, 5],  66.75361799, tolerance = .002 )
-  expect_equal( lo[81, 5], 96.78316785, tolerance = .002 )
+  expect_equal( lo[[5]][1],  66.75361799, tolerance = .002 )
+  expect_equal( lo[[5]][81], 96.78316785, tolerance = .002 )
 })
 
 
 context("leontief-finalDemand")
 
 # leontief decomposition
-lfd <- decomp(x = inter,
-              y = final,
-              k = countries,
-              i = industries,
-              o = out,
-              method = "leontief",
-              post = "final_demand")
+lfd <- decomp(dec, method = "leontief", post = "final_demand")
 
 test_that("output size matches", {
   expect_equal( length(lfd), 4)
@@ -75,11 +60,18 @@ test_that("output size matches", {
 })
 
 test_that("output format matches", {
-  expect_match(typeof(lfd[, 4]), "double")
+  expect_match(typeof(lfd[[4]]), "double")
 })
 
 # test output content (i.e. numbers)
 test_that("output matches", {
-  expect_equal(lfd[1, 4], 24.3345824, tolerance = .002)
-  expect_equal(lfd[20, 4], 23.6841309, tolerance = .002)
+  expect_equal(lfd[[4]][1], 24.3345824, tolerance = .002)
+  expect_equal(lfd[[4]][20], 23.6841309, tolerance = .002)
+})
+
+test_that("long = FALSE returns the matrix", {
+  lm <- leontief(dec, long = FALSE)
+  expect_true(is.matrix(lm))
+  expect_equal(dim(lm), c(9L, 9L))
+  expect_false(attr(lm, "long"))
 })

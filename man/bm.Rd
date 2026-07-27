@@ -13,7 +13,7 @@ bm(
 )
 }
 \arguments{
-\item{x}{an object of class \code{decompr} obtained from \code{\link{load_tables_vectors}}.}
+\item{x}{an object of class \code{icio} obtained from \code{\link{load_icio}}.}
 
 \item{aggregation}{character. The level of the decomposition:
 \code{"country"} (one row per exporting/importing country), \code{"sector"} (one row per
@@ -39,7 +39,7 @@ decomposes a country's gross imports from the importer perspective (Borin and Ma
 eq. 51) into value added (\code{VA}) and double counting (\code{DC}).}
 }
 \value{
-A \code{data.frame} with one row per unit and one column per value-added term,
+A \code{data.table} with one row per unit and one column per value-added term,
  preceded by factor identifier columns: \code{Exporting_Country} (country exports);
  \code{Exporting_Country, Exporting_Industry} (sector); \code{Exporting_Country,
  Exporting_Industry, Importing_Country} (bilateral exports); \code{Importing_Country} (country
@@ -50,8 +50,8 @@ A \code{data.frame} with one row per unit and one column per value-added term,
 Decomposes gross exports (or imports) into value-added and Global Value Chain (GVC) components
 following the Borin and Mancini (2019) framework, as implemented in the Stata \code{icio}
 command (Belotti, Borin and Mancini 2021). It is the R counterpart of the \code{decompose()}
-function in the Julia package \code{GlobalValueChains.jl}, and operates on a \code{decompr}
-object created by \code{\link{load_tables_vectors}}.
+function in the Julia package \code{GlobalValueChains.jl}, and operates on an \code{icio}
+object created by \code{\link{load_icio}}.
 }
 \details{
 The supported combinations mirror the Stata \code{icio} command and \code{GlobalValueChains.jl}:
@@ -103,9 +103,9 @@ the export flow itself, so \code{DVA} (there \eqn{DVA^\star}) is weakly larger t
 exporter approach.
 }
 \examples{
-# Load example data and create a 'decompr' object
+# Load example data and create an 'icio' object
 data(leather)
-dec <- load_tables_vectors(leather)
+dec <- load_icio(leather)
 
 # Country-level decomposition (exporter perspective, source approach; 13 terms)
 bm(dec)
@@ -129,7 +129,7 @@ Belotti, F., Borin, A. and Mancini, M. (2021). icio: Economic analysis with inte
 input-output tables. \emph{The Stata Journal, 21}(3), 708-755.
 }
 \seealso{
-\code{\link{kww}}, \code{\link{wwz}}, \code{\link{leontief}}, \code{\link{decompr-package}}
+\code{\link{kww}}, \code{\link{wwz}}, \code{\link{leontief}}, \code{\link{icio-package}}
 }
 \author{
 Sebastian Krantz

@@ -2,20 +2,20 @@
 #' 
 #' The Leontief decomposition of gross flows (exports, final demand, output) into their value added origins. 
 #'
-#' @param x an object of class decompr.
+#' @param x an object of class 'icio'.
 #' @param post post-multiply the value added multiplier matrix [\eqn{VB = V(I-A)^{-1}}] with something to deduce the value added origins thereof.  
 #' The default is \code{"exports"} \eqn{VAE = V(I-A)^{-1}E}, where \eqn{E} is a diagonal matrix with exports along the diagonal yielding the 
 #' country-industry level sources of value added (rows) for each using (column) country-industry; similarly for \code{"output"}. 
 #' Option \code{"final_demand"} computes value added origins of final demand by source country-industry and importing country, by computing 
 #' \eqn{VAY = V(I-A)^{-1}Y} where \eqn{Y} is the corresponding GN x G matrix contained in \code{x}. Option \code{"none"} just returns \eqn{VB} which gives the value added shares.
 #' @param long logical. Transform the output data into a long (tidy) data set or not, default is \code{TRUE}.
-#' @return If \code{long = TRUE} a molten data frame containing the elements of the decomposed flows matrix in the final column, preceded by several identifier columns. 
+#' @return If \code{long = TRUE} a molten \code{data.table} containing the elements of the decomposed flows matrix in the final column, preceded by several identifier columns. 
 #' If \code{long = FALSE} the decomposed flows matrix is simply returned.
 #' @details The Leontief decomposition is obtained by pre-multiplying the flow measure (e.g. exports) with 
 #' the value added multiplier matrix [\eqn{VB = V(I-A)^{-1}}], obtained by pre-multiplying the Leontief Inverse matrix [\eqn{B = (I-A)^{-1}}] with a diagonal matrix [\eqn{V}] containing the direct value added share in each industries output.
 #' 
-#' \eqn{V} is obtained as \code{diag(v / o)} where \code{o} is total industry output. \code{v} is either supplied to \code{\link{load_tables_vectors}} or computed as \code{o - colSums(x)} with \code{x} the raw IO matrix. 
-#' If \code{o} is not supplied to \code{\link{load_tables_vectors}}, it is computed as \code{rowSums(x) + rowSums(y)} where \code{y} is the matrix of final demands. If both \code{o} and \code{v} are not supplied to \code{\link{load_tables_vectors}}, this is equivalent to computing \eqn{V} as \code{diag(1 - colSums(A))}, with \eqn{A} is the row-normalized IO matrix also used to compute the Leontief Inverse [\eqn{B}].
+#' \eqn{V} is obtained as \code{diag(v / o)} where \code{o} is total industry output. \code{v} is either supplied to \code{\link{load_icio}} or computed as \code{o - colSums(x)} with \code{x} the raw IO matrix. 
+#' If \code{o} is not supplied to \code{\link{load_icio}}, it is computed as \code{rowSums(x) + rowSums(y)} where \code{y} is the matrix of final demands. If both \code{o} and \code{v} are not supplied to \code{\link{load_icio}}, this is equivalent to computing \eqn{V} as \code{diag(1 - colSums(A))}, with \eqn{A} is the row-normalized IO matrix also used to compute the Leontief Inverse [\eqn{B}].
 #' @author Bastiaan Quast
 #' @references 
 #' Leontief, W. (Ed.). (1986). Input-output economics. \emph{Oxford University Press}.
@@ -24,24 +24,24 @@
 #' 
 #' Wang, Zhi, Shang-Jin Wei, and Kunfu Zhu (2013). Quantifying international production sharing at the bilateral and sector levels (No. w19677). \emph{National Bureau of Economic Research}.
 #' @export
-#' @seealso \code{\link{bm}}, \code{\link{kww}}, \code{\link{wwz}}, \code{\link{decompr-package}}
+#' @seealso \code{\link{bm}}, \code{\link{kww}}, \code{\link{wwz}}, \code{\link{icio-package}}
 #' @examples
 #'# Load example data
 #' data(leather)
 #' 
-#'# Create intermediate object (class 'decompr')
-#' decompr_object <- load_tables_vectors(leather)
+#'# Create intermediate object (class 'icio')
+#' m <- load_icio(leather)
 #'
 #'# Perform the Leontief decomposition of each country-industries 
 #'# exports into their value added origins by country-industry
-#' leontief(decompr_object)
+#' leontief(m)
 
 
 leontief <- function(x,
                      post = c("exports", "output", "final_demand", "none"),
                      long = TRUE) {
   
-    if(!inherits(x, "decompr")) stop("x must be an object of class 'decompr' created by the load_tables_vectors() function.")
+    if(!inherits(x, "icio")) stop("x must be an object of class 'icio' created by the load_icio() function.")
   
     post <- match.arg(post)
     
@@ -70,7 +70,6 @@ leontief <- function(x,
     if (isTRUE(long)) {
       
       out <- as.vector(t(out))
-      nr <- length(out)
       sk <- seq_along(k)
       si <- seq_along(i)
       out <- switch(post,
@@ -84,12 +83,11 @@ leontief <- function(x,
                          Using_Industry = structure(rep(si, times = GN * G), levels = i, class = "factor"),
                          FVAX = out))
       
-      attr(out, "row.names") <- .set_row_names(nr)
-      class(out) <- "data.frame"
-      
+      setDT(out)
+
       ## set long attribute to TRUE
-      attr(out, "long") <- TRUE
-      
+      setattr(out, "long", TRUE)
+
     } else {
       
         # Why not return the matrix ? It's more convenient both for heatmap visualization and further analysis, and coercing to data frame has a cost.
@@ -99,16 +97,15 @@ leontief <- function(x,
         # row.names(out) <- rownam
 
         ## set long attribute to FALSE
-        attr(out, "long") <- FALSE
+        setattr(out, "long", FALSE)
 
     }
 
     ## create attributes
-    attr(out, "k") <- k
-    attr(out, "i") <- i
-    attr(out, "decomposition") <- "leontief"
-    attr(out, "post") <- post
-    ## attr(out, "rownam") <- rownam
+    setattr(out, "k", k)
+    setattr(out, "i", i)
+    setattr(out, "decomposition", "leontief")
+    setattr(out, "post", post)
 
     ## return result
     return(out)

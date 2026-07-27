@@ -2,9 +2,9 @@
 #' 
 #' This function performs the Koopman-Wang-Wei (2014) decomposition of a countries gross exports into 9 separate value added components.
 #' 
-#' @param x an object of the class 'decompr' obtained from \code{\link{load_tables_vectors}}.
+#' @param x an object of the class 'icio' obtained from \code{\link{load_icio}}.
 #' @author Sebastian Krantz
-#' @return A data frame where a country's gross exports is decomposed into 9 components (columns), as detailed in Figure 1 of the AER paper:
+#' @return A \code{data.table} where a country's gross exports is decomposed into 9 components (columns), as detailed in Figure 1 of the AER paper:
 #'  \tabular{ll}{
 #'  \emph{Term} \tab \emph{Description} \cr
 #'  \code{DVA_FIN} \tab Domestic VA in final goods exports. \cr
@@ -31,16 +31,16 @@
 #' perspective for the foreign content of exports; this corrected KWW decomposition is available as
 #' \code{\link{bm}(x, perspective = "world", approach = "sink")}.
 #' @export
-#' @seealso \code{\link{bm}}, \code{\link{wwz}}, \code{\link{wwz2kww}}, \code{\link{decompr-package}}
+#' @seealso \code{\link{bm}}, \code{\link{wwz}}, \code{\link{wwz2kww}}, \code{\link{icio-package}}
 #' @examples
 #' # Load example data
 #' data(leather)
 #'
-#' # Create intermediate object (class 'decompr')
-#' decompr_object <- load_tables_vectors(leather)
+#' # Create intermediate object (class 'icio')
+#' m <- load_icio(leather)
 #'  
 #' # Perform the KWW decomposition
-#' kww(decompr_object)
+#' kww(m)
 #' 
 
 
@@ -48,7 +48,7 @@
 # Note: Sector level is false, only aggregated is correct !!
 kww <- function(x) {
   
-  if(!inherits(x, "decompr")) stop("x must be an object of class 'decompr' created by the load_tables_vectors() function.")
+  if(!inherits(x, "icio")) stop("x must be an object of class 'icio' created by the load_icio() function.")
   
   A <- B <- Lb <- Y <- Vc <- N <- G <- GN <- Ym <- Yd <- E <- k <- NULL # First need to initialize as NULL to avoid R CMD check error.
   list2env(x, environment())
@@ -123,10 +123,10 @@ kww <- function(x) {
   attr(out, "row.names") <- .set_row_names(GN)
   class(out) <- "data.frame"
   # Aggregating: Necessary, other wise not correct... (as seen in some negative values in T9 at sector level)
-  out <- cbind(Country = structure(seq_along(k), levels = k, class = "factor"), 
-               rowsum(out, rep(k, each = N), reorder = FALSE))
-  attr(out, "row.names") <- .set_row_names(G)
-  attr(out, "decomposition") <- "kww"
+  out <- c(list(Country = structure(seq_along(k), levels = k, class = "factor")),
+           rowsum(out, rep(k, each = N), reorder = FALSE))
+  setDT(out)
+  setattr(out, "decomposition", "kww")
   out
 }
 
@@ -136,7 +136,7 @@ kww <- function(x) {
 #' This function by default returns a disaggregated version of the the Koopman-Wang-Wei (KWW) decomposition breaking up sector-level gross exports into 9 value added terms,
 #' from an already computed and more detailed (16 term) Wang-Wei-Zhu decomposition of sector-level gross exports. An aggregation option also allows obtaining the aggregate KWW decomposition. 
 #' 
-#' @param x a data frame with the WWZ decomposition obtained from \code{\link{wwz}}. Alternatively a 'decompr' class object from \code{\link{load_tables_vectors}} can be supplied, which will toggle calling \code{wwz()} first. 
+#' @param x a data.table with the WWZ decomposition obtained from \code{\link{wwz}}. Alternatively an 'icio' class object from \code{\link{load_icio}} can be supplied, which will toggle calling \code{wwz()} first. 
 #' @param aggregate logical. \code{TRUE} aggregates the KWW decomposition to the country level, giving exactly the same output as \code{\link{kww}}. \code{FALSE} maintains the sector level decomposition in KWW format. 
 #' @details The mapping of the 16 terms in the WWZ decomposition to the 9 terms in the KWW decomposition is provided in table E2 in the appendix of the WWZ (2013) paper. The table is reproduced here using the term naming 
 #' conventions followed in this package.
@@ -155,23 +155,23 @@ kww <- function(x) {
 #'  }
 #'  
 #' @author Sebastian Krantz
-#' @return A data frame with exports decomposed into 9 components (columns), see the table above and \code{\link{kww}} for a shorter description of the 9 terms.
-#' @note If both WWZ and KWW decompositions are required, it is computationally more efficient to call \code{wwz2kww(x, aggregate = TRUE)} on an already computed WWZ decomposition, than to call \code{\link{kww}} on a 'decompr' object. 
+#' @return A \code{data.table} with exports decomposed into 9 components (columns), see the table above and \code{\link{kww}} for a shorter description of the 9 terms.
+#' @note If both WWZ and KWW decompositions are required, it is computationally more efficient to call \code{wwz2kww(x, aggregate = TRUE)} on an already computed WWZ decomposition, than to call \code{\link{kww}} on an 'icio' object. 
 #' @references Koopman, R., Wang, Z., & Wei, S. J. (2014). Tracing value-added and double counting in gross exports. \emph{American Economic Review, 104}(2), 459-94.
 #' 
 #' Wang, Zhi, Shang-Jin Wei, and Kunfu Zhu (2013). Quantifying international production sharing at the bilateral and sector levels (No. w19677). \emph{National Bureau of Economic Research}.
 #' @export
-#' @seealso \code{\link{wwz}}, \code{\link{kww}}, \code{\link{decompr-package}}
+#' @seealso \code{\link{wwz}}, \code{\link{kww}}, \code{\link{icio-package}}
 #' @examples
 #' 
 #' # Load example data
 #' data(leather)
 #'
-#' # Create intermediate object (class 'decompr')
-#' decompr_object <- load_tables_vectors(leather)
+#' # Create intermediate object (class 'icio')
+#' m <- load_icio(leather)
 #'  
 #' # Perform the WWZ decomposition
-#' WWZ <- wwz(decompr_object)
+#' WWZ <- wwz(m)
 #' 
 #' # Obtain a disaggregated KWW decomposition
 #' KWW <- wwz2kww(WWZ)
@@ -181,17 +181,17 @@ kww <- function(x) {
 #' 
 #' # Same as running KWW directly, but the former is more efficient 
 #' # if we already have the WWZ
-#' kww(decompr_object)
+#' kww(m)
 
 # This is correct, I checked it !!
 wwz2kww <- function(x, aggregate = FALSE) {
   d <- attr(x, "decomposition")
   if(!is.data.frame(x) || is.null(d) || d != "wwz") {
-    if(!inherits(x, "decompr")) stop("x must be a WWZ decomposition obtained from wwz(), or an object of class 'decompr' created by the load_tables_vectors() function.")
+    if(!inherits(x, "icio")) stop("x must be a WWZ decomposition obtained from wwz(), or an object of class 'icio' created by the load_icio() function.")
     x <- wwz(x)
   }
-  y <- x[, 1:3]
-  oldClass(x) <- NULL # Some extra $ subsetting speed
+  x <- unclass(x) # Some extra $ subsetting speed
+  y <- x[1:3]     # the three identifier columns
   y$DVA_FIN <- x$DVA_FIN
   y$DVA_INT <- x$DVA_INT + x$DVA_INTrexI1
   y$DVA_INTrex <- x$DVA_INTrexF + x$DVA_INTrexI2
@@ -201,11 +201,15 @@ wwz2kww <- function(x, aggregate = FALSE) {
   y$FVA_FIN <- x$OVA_FIN + x$MVA_FIN
   y$FVA_INT <- x$OVA_INT + x$MVA_INT
   y$FDC <- x$ODC + x$MDC
-  if(!aggregate) return(`attr<-`(y, "decomposition", "kww"))
-  out <- cbind(Country = unique(x$Exporting_Country), 
-               rowsum(y[, -(1:3)], x$Exporting_Country, reorder = FALSE))
-  row.names(out) <- NULL
-  attr(out, "decomposition") <- "kww"
+  if(!aggregate) {
+    setDT(y)
+    setattr(y, "decomposition", "kww")
+    return(y)
+  }
+  out <- c(list(Country = unique(x$Exporting_Country)),
+           as.data.frame(rowsum(do.call(cbind, y[-(1:3)]), x$Exporting_Country, reorder = FALSE)))
+  setDT(out)
+  setattr(out, "decomposition", "kww")
   out
 }
 
