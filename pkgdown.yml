@@ -1,9 +1,9 @@
 pandoc: 3.8.3
-pkgdown: 2.2.0
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
-  decompr: decompr.html
-last_built: 2026-07-01T15:30Z
+  icio: icio.html
+last_built: 2026-07-27T17:35Z
 urls:
-  reference: https://bquast.github.io/decompr/reference
-  article: https://bquast.github.io/decompr/articles
+  reference: https://sebkrantz.github.io/icio/reference
+  article: https://sebkrantz.github.io/icio/articles

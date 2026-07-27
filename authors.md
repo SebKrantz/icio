@@ -2,10 +2,9 @@
 
 ## Authors
 
-- **Bastiaan Quast**. Author, maintainer.
-  [](https://orcid.org/0000-0002-2951-3577)
+- **Sebastian Krantz**. Author, maintainer.
 
-- **Sebastian Krantz**. Author.
+- **Bastiaan Quast**. Author. [](https://orcid.org/0000-0002-2951-3577)
 
 - **Fei Wang**. Author.
 
@@ -16,18 +15,16 @@
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/bquast/decompr/blob/master/inst/CITATION)
+[`inst/CITATION`](https://github.com/SebKrantz/icio/blob/master/inst/CITATION)
 
-Quast, B.A. and V. Kummritz (2015). decompr: Global Value Chain
-decomposition in R. CTEI Working Papers, 1.
+Krantz, S. and B. Quast (2026). icio: Global Value Chain Decomposition
+of Inter-Country Input-Output Tables. R package version 1.0.0.
+https://github.com/SebKrantz/icio
 
-    @Article{,
-      title = {decompr: Global Value Chain decomposition in R},
-      author = {Bastiaan Quast and Victor Kummritz},
-      organization = {The Graduate Institute},
-      address = {Maison de la paix, Geneva, Switzerland},
-      year = {2015},
-      journal = {CTEI Working Papers},
-      number = {1},
-      url = {https://bastiaanquast.com/decompr/},
+    @Manual{,
+      title = {icio: Global Value Chain Decomposition of Inter-Country Input-Output Tables},
+      author = {Sebastian Krantz and Bastiaan Quast},
+      year = {2026},
+      note = {R package version 1.0.0},
+      url = {https://github.com/SebKrantz/icio},
     }

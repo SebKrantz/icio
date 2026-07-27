@@ -1,95 +1,97 @@
-# decompr
+# icio
 
 [![License](http://img.shields.io/badge/license-GPLv3-brightgreen.svg?style=flat)](https://www.gnu.org/licenses/gpl-3.0.html)
 [![CRAN
-Version](http://www.r-pkg.org/badges/version/decompr)](https://cran.r-project.org/package=decompr)
+Version](http://www.r-pkg.org/badges/version/icio)](https://cran.r-project.org/package=icio)
 [![R build
-status](https://github.com/bquast/decompr/workflows/R-CMD-check/badge.svg)](https://github.com/bquast/decompr/actions?workflow=R-CMD-check)
-[![Total
-Downloads](http://cranlogs.r-pkg.org/badges/grand-total/decompr?color=brightgreen)](https://cran.r-project.org/package=decompr)
-[![Monthly
-Downloads](http://cranlogs.r-pkg.org/badges/decompr?color=brightgreen)](https://cran.r-project.org/package=decompr)
+status](https://github.com/SebKrantz/icio/workflows/R-CMD-check/badge.svg)](https://github.com/SebKrantz/icio/actions?workflow=R-CMD-check)
 
-**decompr** implements four global value chain (GVC) decompositions of
-gross exports into value-added and double-counting components:
+**icio** decomposes gross exports from inter-country input-output (ICIO)
+tables into value-added and double-counting components, implementing
+four decompositions from the global value chain (GVC) literature:
 
 | Function | Method | Level | Terms |
 |----|----|----|----|
-| [`leontief()`](https://bquast.github.io/decompr/reference/leontief.md) | Hummels, Ishii & Yi (2001) | country × industry | continuous VA origin |
-| [`kww()`](https://bquast.github.io/decompr/reference/kww.md) | Koopman, Wang & Wei (2014) | country | 9 |
-| [`wwz()`](https://bquast.github.io/decompr/reference/wwz.md) | Wang, Wei & Zhu (2013) | bilateral country × sector | 16 |
-| [`bm()`](https://bquast.github.io/decompr/reference/bm.md) | Borin & Mancini (2019) | country / sector / bilateral | up to 13 |
+| [`bm()`](https://sebkrantz.github.io/icio/reference/bm.md) | Borin & Mancini (2019) | country / sector / bilateral | up to 13 |
+| [`leontief()`](https://sebkrantz.github.io/icio/reference/leontief.md) | Hummels, Ishii & Yi (2001) | country × industry | continuous VA origin |
+| [`kww()`](https://sebkrantz.github.io/icio/reference/kww.md) | Koopman, Wang & Wei (2014) | country | 9 |
+| [`wwz()`](https://sebkrantz.github.io/icio/reference/wwz.md) | Wang, Wei & Zhu (2013) | bilateral country × sector | 16 |
 
-[`bm()`](https://bquast.github.io/decompr/reference/bm.md) is the
-recommended state-of-the-art decomposition. It also provides a corrected
-version of the KWW decomposition (use
-`perspective = "world", approach = "sink"`), which fixes a known
-systematic bias in
-[`kww()`](https://bquast.github.io/decompr/reference/kww.md).
-
-GVC indicators based on these decompositions are available in the
-companion [gvc](https://cran.r-project.org/package=gvc) package.
+[`bm()`](https://sebkrantz.github.io/icio/reference/bm.md) is the
+recommended state-of-the-art decomposition and reproduces the Stata
+[`icio`](https://www.tradeconomics.com/icio/) command (Belotti, Borin &
+Mancini 2021). It also provides a corrected version of the KWW
+decomposition (`perspective = "world", approach = "sink"`), which fixes
+a known systematic bias in
+[`kww()`](https://sebkrantz.github.io/icio/reference/kww.md).
 
 ## Installation
-
-Install the stable version from CRAN:
-
-``` r
-
-install.packages("decompr")
-```
-
-Install the development version from GitHub:
 
 ``` r
 
 # install.packages("remotes")
-remotes::install_github("bquast/decompr")
+remotes::install_github("SebKrantz/icio")
 ```
 
 ## Usage
 
 ``` r
 
-library(decompr)
+library(icio)
 
-# Load the built-in 3×3 leather-sector ICIO table
+# The built-in 3x3 leather-sector ICIO table
 data(leather)
 
-# Build a decompr object from raw ICIO matrices
-x <- load_tables_vectors(
-  inter  = leather$inter,
-  final  = leather$final,
-  output = leather$output,
-  countries = leather$countries,
-  industries = leather$industries
-)
+# Build an 'icio' object: the expensive step (inverting I - A) is done once here
+m <- load_icio(leather)
 
-# Leontief decomposition
-leontief(x)
-
-# Wang-Wei-Zhu (2013): 16 bilateral terms
-wwz(x)
+# ... or from the raw matrices, or from the Stata 'icio' CSV format
+m <- load_icio(leather$inter, leather$final, leather$countries, leather$industries)
+m <- load_icio_csv("EM_2015.csv", "EM_countrylist.csv")
 
 # Borin-Mancini (2019): up to 13 terms, exporter perspective
-bm(x)
+bm(m)
+bm(m, aggregation = "sector")
+bm(m, aggregation = "bilateral", approach = "sink")
 
-# Borin-Mancini corrected KWW (world / sink perspective)
-bm(x, perspective = "world", approach = "sink")
+# Corrected KWW (world / sink perspective)
+bm(m, perspective = "world", approach = "sink")
 
-# Or use the unified interface
-decomp(x, method = "bm")
+# Importer-perspective decomposition of gross imports
+bm(m, flow = "imports")
+
+# The other decompositions
+leontief(m)
+kww(m)
+wwz(m)
+
+# Unified interface, also for several tables at once (e.g. one per year)
+decomp(m, aggregation = "bilateral")
+decomp(list(`2015` = m, `2016` = m), method = "kww", idcol = "Year")
 ```
 
-See
-[`vignette("decompr")`](https://bquast.github.io/decompr/articles/decompr.md)
+All decompositions return a `data.table`. See
+[`vignette("icio")`](https://sebkrantz.github.io/icio/articles/icio.md)
 for a detailed walk-through.
+
+## Related
+
+- [GlobalValueChains.jl](https://github.com/SebKrantz/GlobalValueChains.jl)
+  — the Julia counterpart;
+  [`bm()`](https://sebkrantz.github.io/icio/reference/bm.md) mirrors its
+  [`decompose()`](https://rdrr.io/r/stats/decompose.html).
+- **icio** is derived from the CRAN package
+  [decompr](https://cran.r-project.org/package=decompr), which is no
+  longer maintained.
 
 ## References
 
 - Borin, A., & Mancini, M. (2019). *Measuring What Matters in Global
   Value Chains and Value-Added Trade*. World Bank Policy Research
   Working Paper 8804.
+- Belotti, F., Borin, A., & Mancini, M. (2021). icio: Economic analysis
+  with inter-country input-output tables. *The Stata Journal*, 21(3),
+  708–755.
 - Koopman, R., Wang, Z., & Wei, S.-J. (2014). Tracing value-added and
   double counting in gross exports. *American Economic Review*, 104(2),
   459–494.

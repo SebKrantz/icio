@@ -13,12 +13,12 @@ kww(x)
 
 - x:
 
-  an object of the class 'decompr' obtained from
-  [`load_tables_vectors`](https://bquast.github.io/decompr/reference/load_tables_vectors.md).
+  an object of the class 'icio' obtained from
+  [`load_icio`](https://sebkrantz.github.io/icio/reference/load_icio.md).
 
 ## Value
 
-A data frame where a country's gross exports is decomposed into 9
+A `data.table` where a country's gross exports is decomposed into 9
 components (columns), as detailed in Figure 1 of the AER paper:
 
 |  |  |
@@ -49,7 +49,7 @@ importer and by third markets (hence indicators such as DAVAX cannot be
 derived from it). Borin and Mancini (2019) correct these issues using a
 sink-based, world-level perspective for the foreign content of exports;
 this corrected KWW decomposition is available as
-[`bm`](https://bquast.github.io/decompr/reference/bm.md)`(x, perspective = "world", approach = "sink")`.
+[`bm`](https://sebkrantz.github.io/icio/reference/bm.md)`(x, perspective = "world", approach = "sink")`.
 
 ## References
 
@@ -63,10 +63,10 @@ Chains and Value-Added Trade. *World Bank Policy Research Working Paper
 
 ## See also
 
-[`bm`](https://bquast.github.io/decompr/reference/bm.md),
-[`wwz`](https://bquast.github.io/decompr/reference/wwz.md),
-[`wwz2kww`](https://bquast.github.io/decompr/reference/wwz2kww.md),
-[`decompr-package`](https://bquast.github.io/decompr/reference/decompr-package.md)
+[`bm`](https://sebkrantz.github.io/icio/reference/bm.md),
+[`wwz`](https://sebkrantz.github.io/icio/reference/wwz.md),
+[`wwz2kww`](https://sebkrantz.github.io/icio/reference/wwz2kww.md),
+[`icio-package`](https://sebkrantz.github.io/icio/reference/icio-package.md)
 
 ## Author
 
@@ -78,17 +78,19 @@ Sebastian Krantz
 # Load example data
 data(leather)
 
-# Create intermediate object (class 'decompr')
-decompr_object <- load_tables_vectors(leather)
+# Create intermediate object (class 'icio')
+m <- load_icio(leather)
  
 # Perform the KWW decomposition
-kww(decompr_object)
-#>     Country  DVA_FIN  DVA_INT DVA_INTrex   RDV_FIN   RDV_INT       DDC
-#> 1 Argentina 19.34940 18.97119   8.411491  5.259501 0.8259724 0.8723949
-#> 2    Turkey 43.39461 26.20678   7.740053 10.475795 2.0075781 2.6369363
-#> 3   Germany 78.73101 15.23967   2.748464  5.689669 4.4335916 4.4481800
-#>     FVA_FIN  FVA_INT      FDC
-#> 1  3.450595 3.388617 3.770832
-#> 2 10.205386 5.359698 5.573163
-#> 3 26.668992 4.455024 5.185401
+kww(m)
+#>      Country  DVA_FIN  DVA_INT DVA_INTrex   RDV_FIN   RDV_INT       DDC
+#>       <fctr>    <num>    <num>      <num>     <num>     <num>     <num>
+#> 1: Argentina 19.34940 18.97119   8.411491  5.259501 0.8259724 0.8723949
+#> 2:    Turkey 43.39461 26.20678   7.740053 10.475795 2.0075781 2.6369363
+#> 3:   Germany 78.73101 15.23967   2.748464  5.689669 4.4335916 4.4481800
+#>      FVA_FIN  FVA_INT      FDC
+#>        <num>    <num>    <num>
+#> 1:  3.450595 3.388617 3.770832
+#> 2: 10.205386 5.359698 5.573163
+#> 3: 26.668992 4.455024 5.185401
 ```

@@ -5,16 +5,16 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Global Value Chain Decomposition • decompr</title>
+<title>Global Value Chain Decomposition of Inter-Country Input-Output Tables • icio</title>
 <!-- katex math --><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script><script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script><script src="katex-auto.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><link href="extra.css" rel="stylesheet">
-<meta property="og:title" content="Global Value Chain Decomposition">
-<meta name="description" content="Four global value chain (GVC) decompositions are implemented. The Leontief decomposition derives the value added origin of exports by country and industry as in Hummels, Ishii and Yi (2001). The Koopman, Wang and Wei (2014) decomposition splits country-level exports into 9 value added components, and the Wang, Wei and Zhu (2013) decomposition splits bilateral exports into 16 value added components. The Borin and Mancini (2019) decomposition splits country-, sector- or bilateral-level exports into up to 13 value added and GVC components. Various GVC indicators based on these decompositions are computed in the complimentary gvc package. --- References: --- Hummels, D., Ishii, J., &amp; Yi, K. M. (2001). The nature and growth of vertical specialization in world trade. Journal of international Economics, 54(1), 75-96. Koopman, R., Wang, Z., &amp; Wei, S. J. (2014). Tracing value-added and double counting in gross exports. American Economic Review, 104(2), 459-94. Wang, Z., Wei, S. J., &amp; Zhu, K. (2013). Quantifying international production sharing at the bilateral and sector levels (No. w19677). National Bureau of Economic Research. Borin, A., &amp; Mancini, M. (2019). Measuring What Matters in Global Value Chains and Value-Added Trade. World Bank Policy Research Working Paper 8804.">
-<meta property="og:description" content="Four global value chain (GVC) decompositions are implemented. The Leontief decomposition derives the value added origin of exports by country and industry as in Hummels, Ishii and Yi (2001). The Koopman, Wang and Wei (2014) decomposition splits country-level exports into 9 value added components, and the Wang, Wei and Zhu (2013) decomposition splits bilateral exports into 16 value added components. The Borin and Mancini (2019) decomposition splits country-, sector- or bilateral-level exports into up to 13 value added and GVC components. Various GVC indicators based on these decompositions are computed in the complimentary gvc package. --- References: --- Hummels, D., Ishii, J., &amp; Yi, K. M. (2001). The nature and growth of vertical specialization in world trade. Journal of international Economics, 54(1), 75-96. Koopman, R., Wang, Z., &amp; Wei, S. J. (2014). Tracing value-added and double counting in gross exports. American Economic Review, 104(2), 459-94. Wang, Z., Wei, S. J., &amp; Zhu, K. (2013). Quantifying international production sharing at the bilateral and sector levels (No. w19677). National Bureau of Economic Research. Borin, A., &amp; Mancini, M. (2019). Measuring What Matters in Global Value Chains and Value-Added Trade. World Bank Policy Research Working Paper 8804.">
+<meta property="og:title" content="Global Value Chain Decomposition of Inter-Country Input-Output Tables">
+<meta name="description" content="Four global value chain (GVC) decompositions are implemented. The Leontief decomposition derives the value added origin of exports by country and industry as in Hummels, Ishii and Yi (2001). The Koopman, Wang and Wei (2014) decomposition splits country-level exports into 9 value added components, and the Wang, Wei and Zhu (2013) decomposition splits bilateral exports into 16 value added components. The Borin and Mancini (2019) decomposition splits country-, sector- or bilateral-level exports into up to 13 value added and GVC components, and also provides a corrected version of the (biased) Koopman-Wang-Wei decomposition. It is the recommended method and reproduces the Stata icio command. --- References: --- Hummels, D., Ishii, J., &amp; Yi, K. M. (2001). The nature and growth of vertical specialization in world trade. Journal of international Economics, 54(1), 75-96. Koopman, R., Wang, Z., &amp; Wei, S. J. (2014). Tracing value-added and double counting in gross exports. American Economic Review, 104(2), 459-94. Wang, Z., Wei, S. J., &amp; Zhu, K. (2013). Quantifying international production sharing at the bilateral and sector levels (No. w19677). National Bureau of Economic Research. Borin, A., &amp; Mancini, M. (2019). Measuring What Matters in Global Value Chains and Value-Added Trade. World Bank Policy Research Working Paper 8804.">
+<meta property="og:description" content="Four global value chain (GVC) decompositions are implemented. The Leontief decomposition derives the value added origin of exports by country and industry as in Hummels, Ishii and Yi (2001). The Koopman, Wang and Wei (2014) decomposition splits country-level exports into 9 value added components, and the Wang, Wei and Zhu (2013) decomposition splits bilateral exports into 16 value added components. The Borin and Mancini (2019) decomposition splits country-, sector- or bilateral-level exports into up to 13 value added and GVC components, and also provides a corrected version of the (biased) Koopman-Wang-Wei decomposition. It is the recommended method and reproduces the Stata icio command. --- References: --- Hummels, D., Ishii, J., &amp; Yi, K. M. (2001). The nature and growth of vertical specialization in world trade. Journal of international Economics, 54(1), 75-96. Koopman, R., Wang, Z., &amp; Wei, S. J. (2014). Tracing value-added and double counting in gross exports. American Economic Review, 104(2), 459-94. Wang, Z., Wei, S. J., &amp; Zhu, K. (2013). Quantifying international production sharing at the bilateral and sector levels (No. w19677). National Bureau of Economic Research. Borin, A., &amp; Mancini, M. (2019). Measuring What Matters in Global Value Chains and Value-Added Trade. World Bank Policy Research Working Paper 8804.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -22,9 +22,9 @@
 
     <nav class="navbar navbar-expand-lg fixed-top bg-primary" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
 
-    <a class="navbar-brand me-2" href="index.html">decompr</a>
+    <a class="navbar-brand me-2" href="index.html">icio</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">7.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,7 +41,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/bquast/decompr" aria-label="GitHub"><span class="fa fa-github"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/SebKrantz/icio" aria-label="GitHub"><span class="fa fa-github"></span></a></li>
       </ul>
 </div>
 
@@ -50,10 +50,10 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="decompr">decompr<a class="anchor" aria-label="anchor" href="#decompr"></a>
+<div class="page-header"><h1 id="icio">icio<a class="anchor" aria-label="anchor" href="#icio"></a>
 </h1></div>
-<p><a href="https://www.gnu.org/licenses/gpl-3.0.html" class="external-link"><img src="http://img.shields.io/badge/license-GPLv3-brightgreen.svg?style=flat" alt="License"></a> <a href="https://cran.r-project.org/package=decompr" class="external-link"><img src="http://www.r-pkg.org/badges/version/decompr" alt="CRAN Version"></a> <a href="https://github.com/bquast/decompr/actions?workflow=R-CMD-check" class="external-link"><img src="https://github.com/bquast/decompr/workflows/R-CMD-check/badge.svg" alt="R build status"></a> <a href="https://cran.r-project.org/package=decompr" class="external-link"><img src="http://cranlogs.r-pkg.org/badges/grand-total/decompr?color=brightgreen" alt="Total Downloads"></a> <a href="https://cran.r-project.org/package=decompr" class="external-link"><img src="http://cranlogs.r-pkg.org/badges/decompr?color=brightgreen" alt="Monthly Downloads"></a></p>
-<p><strong>decompr</strong> implements four global value chain (GVC) decompositions of gross exports into value-added and double-counting components:</p>
+<p><a href="https://www.gnu.org/licenses/gpl-3.0.html" class="external-link"><img src="http://img.shields.io/badge/license-GPLv3-brightgreen.svg?style=flat" alt="License"></a> <a href="https://cran.r-project.org/package=icio" class="external-link"><img src="http://www.r-pkg.org/badges/version/icio" alt="CRAN Version"></a> <a href="https://github.com/SebKrantz/icio/actions?workflow=R-CMD-check" class="external-link"><img src="https://github.com/SebKrantz/icio/workflows/R-CMD-check/badge.svg" alt="R build status"></a></p>
+<p><strong>icio</strong> decomposes gross exports from inter-country input-output (ICIO) tables into value-added and double-counting components, implementing four decompositions from the global value chain (GVC) literature:</p>
 <table class="table">
 <colgroup>
 <col width="31%">
@@ -68,6 +68,12 @@
 <th>Terms</th>
 </tr></thead>
 <tbody>
+<tr>
+<td><code><a href="reference/bm.html">bm()</a></code></td>
+<td>Borin &amp; Mancini (2019)</td>
+<td>country / sector / bilateral</td>
+<td>up to 13</td>
+</tr>
 <tr>
 <td><code><a href="reference/leontief.html">leontief()</a></code></td>
 <td>Hummels, Ishii &amp; Yi (2001)</td>
@@ -86,66 +92,69 @@
 <td>bilateral country × sector</td>
 <td>16</td>
 </tr>
-<tr>
-<td><code><a href="reference/bm.html">bm()</a></code></td>
-<td>Borin &amp; Mancini (2019)</td>
-<td>country / sector / bilateral</td>
-<td>up to 13</td>
-</tr>
 </tbody>
 </table>
-<p><code><a href="reference/bm.html">bm()</a></code> is the recommended state-of-the-art decomposition. It also provides a corrected version of the KWW decomposition (use <code>perspective = "world", approach = "sink"</code>), which fixes a known systematic bias in <code><a href="reference/kww.html">kww()</a></code>.</p>
-<p>GVC indicators based on these decompositions are available in the companion <a href="https://cran.r-project.org/package=gvc" class="external-link">gvc</a> package.</p>
+<p><code><a href="reference/bm.html">bm()</a></code> is the recommended state-of-the-art decomposition and reproduces the Stata <a href="https://www.tradeconomics.com/icio/" class="external-link"><code>icio</code></a> command (Belotti, Borin &amp; Mancini 2021). It also provides a corrected version of the KWW decomposition (<code>perspective = "world", approach = "sink"</code>), which fixes a known systematic bias in <code><a href="reference/kww.html">kww()</a></code>.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>Install the stable version from CRAN:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"decompr"</span><span class="op">)</span></span></code></pre></div>
-<p>Install the development version from GitHub:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"bquast/decompr"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"SebKrantz/icio"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
 </h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bquast.github.io/decompr/">decompr</a></span><span class="op">)</span></span>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://sebkrantz.github.io/icio/">icio</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Load the built-in 3×3 leather-sector ICIO table</span></span>
+<span><span class="co"># The built-in 3x3 leather-sector ICIO table</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">leather</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Build a decompr object from raw ICIO matrices</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/load_tables_vectors.html">load_tables_vectors</a></span><span class="op">(</span></span>
-<span>  inter  <span class="op">=</span> <span class="va">leather</span><span class="op">$</span><span class="va">inter</span>,</span>
-<span>  final  <span class="op">=</span> <span class="va">leather</span><span class="op">$</span><span class="va">final</span>,</span>
-<span>  output <span class="op">=</span> <span class="va">leather</span><span class="op">$</span><span class="va">output</span>,</span>
-<span>  countries <span class="op">=</span> <span class="va">leather</span><span class="op">$</span><span class="va">countries</span>,</span>
-<span>  industries <span class="op">=</span> <span class="va">leather</span><span class="op">$</span><span class="va">industries</span></span>
-<span><span class="op">)</span></span>
+<span><span class="co"># Build an 'icio' object: the expensive step (inverting I - A) is done once here</span></span>
+<span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/load_icio.html">load_icio</a></span><span class="op">(</span><span class="va">leather</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Leontief decomposition</span></span>
-<span><span class="fu"><a href="reference/leontief.html">leontief</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Wang-Wei-Zhu (2013): 16 bilateral terms</span></span>
-<span><span class="fu"><a href="reference/wwz.html">wwz</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="co"># ... or from the raw matrices, or from the Stata 'icio' CSV format</span></span>
+<span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/load_icio.html">load_icio</a></span><span class="op">(</span><span class="va">leather</span><span class="op">$</span><span class="va">inter</span>, <span class="va">leather</span><span class="op">$</span><span class="va">final</span>, <span class="va">leather</span><span class="op">$</span><span class="va">countries</span>, <span class="va">leather</span><span class="op">$</span><span class="va">industries</span><span class="op">)</span></span>
+<span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/load_icio_csv.html">load_icio_csv</a></span><span class="op">(</span><span class="st">"EM_2015.csv"</span>, <span class="st">"EM_countrylist.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Borin-Mancini (2019): up to 13 terms, exporter perspective</span></span>
-<span><span class="fu"><a href="reference/bm.html">bm</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/bm.html">bm</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/bm.html">bm</a></span><span class="op">(</span><span class="va">m</span>, aggregation <span class="op">=</span> <span class="st">"sector"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/bm.html">bm</a></span><span class="op">(</span><span class="va">m</span>, aggregation <span class="op">=</span> <span class="st">"bilateral"</span>, approach <span class="op">=</span> <span class="st">"sink"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Borin-Mancini corrected KWW (world / sink perspective)</span></span>
-<span><span class="fu"><a href="reference/bm.html">bm</a></span><span class="op">(</span><span class="va">x</span>, perspective <span class="op">=</span> <span class="st">"world"</span>, approach <span class="op">=</span> <span class="st">"sink"</span><span class="op">)</span></span>
+<span><span class="co"># Corrected KWW (world / sink perspective)</span></span>
+<span><span class="fu"><a href="reference/bm.html">bm</a></span><span class="op">(</span><span class="va">m</span>, perspective <span class="op">=</span> <span class="st">"world"</span>, approach <span class="op">=</span> <span class="st">"sink"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Or use the unified interface</span></span>
-<span><span class="fu"><a href="reference/decomp.html">decomp</a></span><span class="op">(</span><span class="va">x</span>, method <span class="op">=</span> <span class="st">"bm"</span><span class="op">)</span></span></code></pre></div>
-<p>See <code><a href="articles/decompr.html">vignette("decompr")</a></code> for a detailed walk-through.</p>
+<span><span class="co"># Importer-perspective decomposition of gross imports</span></span>
+<span><span class="fu"><a href="reference/bm.html">bm</a></span><span class="op">(</span><span class="va">m</span>, flow <span class="op">=</span> <span class="st">"imports"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># The other decompositions</span></span>
+<span><span class="fu"><a href="reference/leontief.html">leontief</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/kww.html">kww</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/wwz.html">wwz</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Unified interface, also for several tables at once (e.g. one per year)</span></span>
+<span><span class="fu"><a href="reference/decomp.html">decomp</a></span><span class="op">(</span><span class="va">m</span>, aggregation <span class="op">=</span> <span class="st">"bilateral"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/decomp.html">decomp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>`2015` <span class="op">=</span> <span class="va">m</span>, `2016` <span class="op">=</span> <span class="va">m</span><span class="op">)</span>, method <span class="op">=</span> <span class="st">"kww"</span>, idcol <span class="op">=</span> <span class="st">"Year"</span><span class="op">)</span></span></code></pre></div>
+<p>All decompositions return a <code>data.table</code>. See <code><a href="articles/icio.html">vignette("icio")</a></code> for a detailed walk-through.</p>
+</div>
+<div class="section level2">
+<h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
+</h2>
+<ul>
+<li>
+<a href="https://github.com/SebKrantz/GlobalValueChains.jl" class="external-link">GlobalValueChains.jl</a> — the Julia counterpart; <code><a href="reference/bm.html">bm()</a></code> mirrors its <code><a href="https://rdrr.io/r/stats/decompose.html" class="external-link">decompose()</a></code>.</li>
+<li>
+<strong>icio</strong> is derived from the CRAN package <a href="https://cran.r-project.org/package=decompr" class="external-link">decompr</a>, which is no longer maintained.</li>
+</ul>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <ul>
 <li>Borin, A., &amp; Mancini, M. (2019). <em>Measuring What Matters in Global Value Chains and Value-Added Trade</em>. World Bank Policy Research Working Paper 8804.</li>
+<li>Belotti, F., Borin, A., &amp; Mancini, M. (2021). icio: Economic analysis with inter-country input-output tables. <em>The Stata Journal</em>, 21(3), 708–755.</li>
 <li>Koopman, R., Wang, Z., &amp; Wei, S.-J. (2014). Tracing value-added and double counting in gross exports. <em>American Economic Review</em>, 104(2), 459–494.</li>
 <li>Wang, Z., Wei, S.-J., &amp; Zhu, K. (2013). <em>Quantifying International Production Sharing at the Bilateral and Sector Levels</em>. NBER Working Paper 19677.</li>
 <li>Hummels, D., Ishii, J., &amp; Yi, K.-M. (2001). The nature and growth of vertical specialization in world trade. <em>Journal of International Economics</em>, 54(1), 75–96.</li>
@@ -155,9 +164,8 @@
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
-<li><a href="https://cloud.r-project.org/package=decompr" class="external-link">View on CRAN</a></li>
-<li><a href="https://github.com/bquast/decompr/" class="external-link">Browse source code</a></li>
-<li><a href="https://github.com/bquast/decompr/issues" class="external-link">Report a bug</a></li>
+<li><a href="https://github.com/SebKrantz/icio/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/SebKrantz/icio/issues" class="external-link">Report a bug</a></li>
 </ul>
 </div>
 
@@ -172,15 +180,15 @@
 <div class="citation">
 <h2 data-toc-skip>Citation</h2>
 <ul class="list-unstyled">
-<li><a href="authors.html#citation">Citing decompr</a></li>
+<li><a href="authors.html#citation">Citing icio</a></li>
 </ul>
 </div>
 
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Bastiaan Quast <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0002-2951-3577" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
-<li>Sebastian Krantz <br><small class="roles"> Author </small>   </li>
+<li>Sebastian Krantz <br><small class="roles"> Author, maintainer </small>   </li>
+<li>Bastiaan Quast <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-2951-3577" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 <li>Fei Wang <br><small class="roles"> Author </small>   </li>
 <li>Victor Stolzenburg <br><small class="roles"> Author </small>   </li>
 <li><a href="authors.html">More about authors...</a></li>
@@ -194,11 +202,11 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Bastiaan Quast, Sebastian Krantz, Fei Wang, Victor Stolzenburg.</p>
+  <p>Developed by Sebastian Krantz, Bastiaan Quast, Fei Wang, Victor Stolzenburg.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>
