@@ -12,7 +12,9 @@ command; it is the 1:1 R counterpart of `decompose()` in
 [GlobalValueChains.jl](https://github.com/SebKrantz/GlobalValueChains.jl) (Julia, checked out
 locally at `~/Documents/Julia/ICIO.jl` — the directory kept the old name).
 
-The package is derived from CRAN's `decompr` (through v8.0.0), whose maintainer went inactive.
+The package is derived from `decompr`, whose maintainer went inactive. `decompr`'s last CRAN
+release was 6.9.0; its 7.0.0 (full `bm()` variant surface) and 8.0.0 (object reduction) were
+developed but never published, so `icio 1.0.0`'s NEWS is written against 6.9.0.
 The git working directory is still named `decompr`; the package inside it is `icio`. There is
 **no backwards compatibility with `decompr`** — do not add compatibility shims or aliases.
 
@@ -72,7 +74,7 @@ The object's fields:
 - `Vc` = value-added coefficients `va/output`; `E`/`ESR` = exports; `X`/`Y`/`Yd`/`Ym`;
   `G`/`N`/`GN`/`k`/`i`.
 
-**Do not add masked or block-diagonal copies back to the object.** `decompr` before 8.0.0 also
+**Do not add masked or block-diagonal copies back to the object.** `decompr` up to 6.9.0 also
 stored `Am` (A with domestic blocks zeroed), `Bd`/`Bm` (domestic/foreign parts of B), a dense
 `L`, plus `Eint`/`Efd`/`rownam`. All were derivable, and `Bd`/`L` were ~99% zeros at realistic
 G. Each decomposition derives what it needs:
