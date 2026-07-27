@@ -182,7 +182,7 @@ bm <- function(x,
 # with list2env(P, environment()).
 .bm_prep <- function(x) {
 
-  Am <- B <- Bd <- Bm <- L <- Vc <- E <- ESR <- Y <- Yd <- Ym <- X <-
+  A <- B <- Lb <- Vc <- E <- ESR <- Y <- Yd <- Ym <- X <-
     G <- N <- GN <- k <- i <- NULL
   list2env(x, environment())
 
@@ -192,15 +192,25 @@ bm <- function(x,
   idiag   <- cbind(seq_len(GN), ctryvec)              # [j, country(j)] extraction index
   IN      <- diag(N)
 
-  # Full input-coefficient matrix A: decompr stores only Am (foreign A, domestic blocks zeroed).
-  # Recover the domestic blocks from the block-diagonal local Leontief L (L_gg = (I - A_gg)^{-1}).
-  A <- Am
-  for(g in seq_len(G)) { bg <- blk(g); A[bg, bg] <- IN - solve(L[bg, bg]) }
+  # Foreign input coefficients: A with the domestic blocks zeroed. Several engines slice this by
+  # country block, so it is materialized once here.
+  Am <- A
+  for(g in seq_len(G)) { bg <- blk(g); Am[bg, bg] <- 0 }
 
-  ## per-cell value-added multipliers (length GN)
-  VBdom <- colSums2(Bd * Vc)                          # domestic VA multiplier
-  VBfor <- colSums2(Bm * Vc)                          # foreign  VA multiplier
-  VLdom <- colSums2(L  * Vc)                          # local domestic VA multiplier
+  ## Per-cell value-added multipliers (length GN). The domestic ones are block-diagonal products,
+  ## so they are formed from the diagonal blocks of B and the local Leontief blocks Lb -- neither
+  ## Bd, Bm nor a dense L is ever materialized. Wcol = L %*% Yd[idiag] is likewise block-diagonal.
+  VBdom  <- numeric(GN)                               # domestic VA multiplier
+  VLdom  <- numeric(GN)                               # local domestic VA multiplier
+  Wcol   <- numeric(GN)                               # L_rr Y_rr, stacked
+  Yddiag <- Yd[idiag]                                 # domestic final demand per country-sector
+  for(g in seq_len(G)) {
+    bg <- blk(g)
+    VBdom[bg] <- as.vector(Vc[bg] %*% B[bg, bg, drop = FALSE])
+    VLdom[bg] <- as.vector(Vc[bg] %*% Lb[[g]])
+    Wcol[bg]  <- Lb[[g]] %*% Yddiag[bg]
+  }
+  VBfor <- as.vector(Vc %*% B) - VBdom                # foreign VA multiplier
 
   ## exporter/source foreign-VA-once coefficient
   fvacoef <- numeric(GN)
@@ -210,12 +220,10 @@ bm <- function(x,
     fvacoef[bs] <- solve(t(IN + Ms), VBfor[bs])
   }
 
-  Yddiag <- Yd[idiag]                                 # domestic final demand per country-sector
-  Wcol   <- as.vector(L %*% Yddiag)                   # L_rr Y_rr, stacked
-  BFD    <- B %*% Y                                   # output driven by each country's final demand
+  BFD <- B %*% Y                                      # output driven by each country's final demand
 
   list(G = G, N = N, GN = GN, k = k, i = i, Nseq = Nseq, blk = blk, ctryvec = ctryvec,
-       idiag = idiag, IN = IN, A = A, Am = Am, B = B, L = L, Vc = Vc, X = X, E = E, ESR = ESR,
+       idiag = idiag, IN = IN, A = A, Am = Am, B = B, Lb = Lb, Vc = Vc, X = X, E = E, ESR = ESR,
        Y = Y, Yd = Yd, Ym = Ym, VBdom = VBdom, VBfor = VBfor, VLdom = VLdom, fvacoef = fvacoef,
        Wcol = Wcol, BFD = BFD)
 }
@@ -317,7 +325,9 @@ bm <- function(x,
   if(approach == "sink") {
     ## world/sink foreign VA (eq. 54)
     Yms     <- rowSums2(Ym)
-    Wrex    <- as.vector(L %*% (Yms + as.vector(Am %*% Wcol)))
+    wv      <- Yms + as.vector(Am %*% Wcol)
+    Wrex    <- numeric(GN)                             # L %*% wv, block-diagonal
+    for(g in seq_len(G)) { bg <- blk(g); Wrex[bg] <- Lb[[g]] %*% wv[bg] }
     AsrWrex <- matrix(0, GN, G)
     VBR     <- matrix(0, GN, G)
     for(r in seq_len(G)) {
@@ -334,7 +344,7 @@ bm <- function(x,
     FVA <- numeric(G)
     for(s in seq_len(G)) {
       bs   <- blk(s)
-      etil <- L[bs, bs, drop = FALSE] %*% E[bs]           # L_ss E_s (N-vector)
+      etil <- Lb[[s]] %*% E[bs]                          # L_ss E_s (N-vector)
       w    <- as.vector(A[, bs, drop = FALSE] %*% etil)   # GN-vector
       keep <- ctryvec != s                                # foreign origins only
       FVA[s] <- sum(VLdom[keep] * w[keep])
@@ -383,7 +393,7 @@ bm <- function(x,
     for(r in seq_len(G)) {
       if(r == s) next
       br  <- blk(r)
-      Lrr <- L[br, br, drop = FALSE]; Arr <- A[br, br, drop = FALSE]; Asr <- A[bs, br, drop = FALSE]
+      Lrr <- Lb[[r]]; Arr <- A[br, br, drop = FALSE]; Asr <- A[bs, br, drop = FALSE]
       Psi  <- Yrow[br] + AXtil[br] - Arr %*% Xtil[br]
       Phi  <- as.vector(Y[bs, r] + Asr %*% (Lrr %*% Psi))                # N
       Psir <- Y[br, s] + AXtil_s[br] - Arr %*% Xtil_s[br]

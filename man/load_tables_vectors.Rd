@@ -40,27 +40,24 @@ countries the same as in x.}
 \value{
 A 'decompr' class object - a list with the following elements:
  \tabular{rrrl}{
- Am \tab\tab\tab Imported / Exported goods IO shares matrix (\code{x} column-normalized by output \code{o}, with domestic entries set to 0). \cr
- B  \tab\tab\tab Leontief Inverse matrix \eqn{(I - A)^{-1}} where \eqn{A} is \code{x} column-normalized by output \code{o}. \cr               
- Bd \tab\tab\tab Domestic part of Leontief Inverse matrix (inter-country elements of \eqn{B} set to 0, needed for WWZ decomposition). \cr                 
- Bm \tab\tab\tab Imported / Exported part of Leontief Inverse matrix (domestic elements of \eqn{B} set to 0, needed for WWZ decomposition). \cr              
- L  \tab\tab\tab Domestic economy Leontief Inverse matrix \eqn{(I - Ad)^{-1}} where \eqn{Ad} is \eqn{A} with all inter-country elements set to 0. \cr
+ A  \tab\tab\tab Input coefficients matrix (\code{x} column-normalized by output \code{o}), including the domestic blocks. \cr
+ B  \tab\tab\tab Leontief Inverse matrix \eqn{(I - A)^{-1}}. \cr
+ Lb \tab\tab\tab List of \code{G} domestic (local) Leontief Inverse blocks \eqn{(I - A_{gg})^{-1}}, one \code{N x N} matrix per country. \cr
  E  \tab\tab\tab Total Exports (output of each country-industry servicing foreign production or foreign final demand). \cr
  ESR \tab\tab\tab Total Exports by destination country. \cr
- Eint \tab\tab\tab Exports for intermediate production by destination country. \cr
- Efd \tab\tab\tab Exports for final demand by destination country. \cr
  Vc \tab\tab\tab Value added content of output (\code{v / o}). \cr
  G \tab\tab\tab Number of countries. \cr
  N \tab\tab\tab Number of industries. \cr
  GN \tab\tab\tab Number of country-industries. \cr
- k \tab\tab\tab Vector of country names. \cr  
+ k \tab\tab\tab Vector of country names. \cr
  i \tab\tab\tab Vector of industry names. \cr
- rownam \tab\tab\tab Unique country-industry names identifying the rows / columns of x and rows of y. \cr
  X \tab\tab\tab Total Output (\code{ = o}). \cr
- Y \tab\tab\tab Total Final Demand by destination country. \cr 
+ Y \tab\tab\tab Total Final Demand by destination country. \cr
  Yd \tab\tab\tab Domestic Final Demand. \cr
  Ym \tab\tab\tab Foreign Final Demand. \cr
  }
+ The country-industry names identifying the rows and columns are available as \code{names(x$Vc)}
+ or \code{dimnames(x$B)[[1L]]}.
 }
 \description{
 This function loads the demand tables
@@ -69,6 +66,21 @@ and creates all matrices and variables required for the GVC decompositions.
 \details{
 Adapted from code by Fei Wang.
 }
+\section{Changes in version 8.0.0}{
+
+ The object was reduced from five dense \code{GN x GN} matrices to two. The fields \code{Am},
+ \code{Bd}, \code{Bm} and \code{L} were masked or block-diagonal copies of \code{A} and \code{B}
+ and have been removed, as have \code{Eint}, \code{Efd} and \code{rownam}. \code{A} is now stored
+ in full (previously only \code{Am}, with the domestic blocks zeroed, was kept), and the
+ block-diagonal domestic Leontief inverse is stored as the \code{G} blocks \code{Lb} it consists
+ of rather than as a dense matrix that is 1 - 1/G zeros. The decomposition functions derive
+ whatever masked forms they need. Code that used the removed fields can recover them with
+ \code{Am <- A; Bd <- matrix(0, GN, GN); Bm <- B; L <- matrix(0, GN, GN)} and, for each country
+ block \code{bg}, \code{Am[bg, bg] <- 0; Bd[bg, bg] <- B[bg, bg]; Bm[bg, bg] <- 0;
+ L[bg, bg] <- Lb[[g]]}; further \code{Efd} equals \code{Ym} and \code{Eint} equals
+ \code{ESR - Ym}.
+}
+
 \examples{
 # Load example data
 data(leather)

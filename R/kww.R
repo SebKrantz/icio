@@ -50,44 +50,66 @@ kww <- function(x) {
   
   if(!inherits(x, "decompr")) stop("x must be an object of class 'decompr' created by the load_tables_vectors() function.")
   
-  B <- Y <- Vc <- N <- G <- GN <- Bd <- Ym <- Bm <- Yd <- Am <- L <- E <- k <- NULL # First need to initialize as NULL to avoid R CMD check error. 
+  A <- B <- Lb <- Y <- Vc <- N <- G <- GN <- Ym <- Yd <- E <- k <- NULL # First need to initialize as NULL to avoid R CMD check error.
   list2env(x, environment())
-  
+
+  Nseq <- seq_len(N)
+  blk <- function(g) (g - 1L) * N + Nseq
+
+  # Foreign input coefficients: A with the domestic blocks zeroed.
+  Am <- A
+  for (g in seq_len(G)) { bg <- blk(g); Am[bg, bg] <- 0 }
+
+  # The domestic parts of B and the local Leontief inverse L are block-diagonal, so the products
+  # below are formed blockwise from the diagonal blocks of B and from Lb. This avoids materializing
+  # Bd, Bm and a dense L, and -- by re-associating Bm %*% Am %*% L %*% Z as Bm %*% (Am %*% (L %*% Z))
+  # with Z of only G columns -- also avoids two GN x GN matrix products.
+  BdZ <- function(Z) {           # domestic (block-diagonal) part of B %*% Z
+    out <- matrix(0, GN, ncol(Z))
+    for (g in seq_len(G)) { bg <- blk(g); out[bg, ] <- B[bg, bg, drop = FALSE] %*% Z[bg, , drop = FALSE] }
+    out
+  }
+  BmZ <- function(Z) B %*% Z - BdZ(Z)   # foreign part of B %*% Z
+  LZ  <- function(Z) {                  # L %*% Z, L block-diagonal
+    out <- matrix(0, GN, ncol(Z))
+    for (g in seq_len(G)) { bg <- blk(g); out[bg, ] <- Lb[[g]] %*% Z[bg, , drop = FALSE] }
+    out
+  }
+
   # breaking up gross output according to where it is ultimately absorbed...
   Xc <- B %*% Y                  # Xc = 'Gross output decomposition matrix'
-  VB <- Vc * B
   # Value added by destination of final absorption (domestic and exported VA)
   VBY <- Vc * Xc   # VBY = value-added production matrix (same as diag(Vc) %*% Xc)
-  # Elements in the diagonal columns give each country’s production of value added absorbed at home. 
+  # Elements in the diagonal columns give each country’s production of value added absorbed at home.
   # Exports of value added can be defined as the elements in the off-diagonal columns of this GN × G matrix
   i1 <- rep(1:N, G)
   i2 <- rep(0:(G-1L), each = N)
   idiag <- i1 + (N * i2) + (GN * i2)
   VBY[idiag] <- 0
   # Obviously it excludes value added produced by the home country that returns home after being processed abroad.
-  
+
   # Terms 1-3: VA Exports
-  vae <- rowSums(VBY)               # Total VA exports, which are broken down as follows: 
-  T1 <- Vc * rowSums(Bd %*% Ym)     # VA in the country’s (direct) final goods exports to different importers.
-  T2 <- Vc * drop(Bm %*% Yd[idiag]) # VA in the country’s intermediate exports used by the direct importer to produce final goods consumed by the direct importer.
+  vae <- rowSums(VBY)               # Total VA exports, which are broken down as follows:
+  T1 <- Vc * rowSums(BdZ(Ym))       # VA in the country’s (direct) final goods exports to different importers.
+  T2 <- Vc * drop(BmZ(cbind(Yd[idiag]))) # VA in the country’s intermediate exports used by the direct importer to produce final goods consumed by the direct importer.
   T3 <- vae - (T1 + T2)             # VA in the country’s intermediate exports used by the direct importer to produce final goods absorbed in third countries.
 
-  # Now we consider the FVA and double counted terms (eventually absorbed at home) in gross exports. 
-  
+  # Now we consider the FVA and double counted terms (eventually absorbed at home) in gross exports.
+
   # Terms 4-6: Domestic content in intermediate exports that finally returns home
-  T4 <- Vc * (Bm %*% Ym)[idiag]     # DVA that is initially embodied in its intermediate exports but is returned home as part of imports of the final good.
-  tmp <- Bm %*% Am %*% L
-  T5 <- Vc * (tmp %*% Yd)[idiag]  # DVA that is initially embodied in intermediate goods exports but then returned home via intermediate imports to produce final goods that are absorbed at home.  
+  T4 <- Vc * BmZ(Ym)[idiag]         # DVA that is initially embodied in its intermediate exports but is returned home as part of imports of the final good.
+  AmLYd <- Am %*% LZ(Yd)
+  T5 <- Vc * BmZ(AmLYd)[idiag]    # DVA that is initially embodied in intermediate goods exports but then returned home via intermediate imports to produce final goods that are absorbed at home.
       # T4 and T5 are parts of the source country’s GDP but represent a double-counted portion in official gross export statistics (counted at least twice in trade statistics as they first leave Country 1 for Country 2, and then leave Country 2 for Country 1 and stay in country 1).
   Ediag <- Yd
   Ediag[idiag] <- E
-  T6 <- Vc * (tmp %*% Ediag)[idiag] # Pure double-counted DVA in intermediate exports that return home and are already captured in T4 and T5 (exists only if two-way trade in intermediate goods, not part of countries GDP) we cannot directly see where they are absorbed.
+  T6 <- Vc * BmZ(Am %*% LZ(Ediag))[idiag] # Pure double-counted DVA in intermediate exports that return home and are already captured in T4 and T5 (exists only if two-way trade in intermediate goods, not part of countries GDP) we cannot directly see where they are absorbed.
 
   # Terms 7-9: Foreign VA
   T7 <- T8 <- T9 <- E
   ifac <- as.factor(i1[-(1:N)])
   Yms <- rowSums(Ym)                 # needed for T7
-  AmLYds <- rowSums(Am %*% L %*% Yd) # Needed for T8
+  AmLYds <- rowSums(AmLYd)           # Needed for T8
   for(s in 1:G) {
     is <- 1L + (s - 1L) * N
     is <- is:(is + N - 1L)

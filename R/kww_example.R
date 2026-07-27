@@ -1,3 +1,7 @@
+# NOTE: not part of the built package (.Rbuildignore). Written against the pre-8.0.0 'decompr'
+# object and still expects the removed Am field -- see ?load_tables_vectors for how to rebuild it
+# from A.
+
 # KWW Example:
 if(FALSE) {
 library(decompr)

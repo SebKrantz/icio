@@ -18,27 +18,36 @@
 #' @param null_inventory logical. \code{TRUE} sets the inventory (last final demand category for each country) to zero.
 #' @return A 'decompr' class object - a list with the following elements:
 #'  \tabular{rrrl}{
-#'  Am \tab\tab\tab Imported / Exported goods IO shares matrix (\code{x} column-normalized by output \code{o}, with domestic entries set to 0). \cr
-#'  B  \tab\tab\tab Leontief Inverse matrix \eqn{(I - A)^{-1}} where \eqn{A} is \code{x} column-normalized by output \code{o}. \cr               
-#'  Bd \tab\tab\tab Domestic part of Leontief Inverse matrix (inter-country elements of \eqn{B} set to 0, needed for WWZ decomposition). \cr                 
-#'  Bm \tab\tab\tab Imported / Exported part of Leontief Inverse matrix (domestic elements of \eqn{B} set to 0, needed for WWZ decomposition). \cr              
-#'  L  \tab\tab\tab Domestic economy Leontief Inverse matrix \eqn{(I - Ad)^{-1}} where \eqn{Ad} is \eqn{A} with all inter-country elements set to 0. \cr
+#'  A  \tab\tab\tab Input coefficients matrix (\code{x} column-normalized by output \code{o}), including the domestic blocks. \cr
+#'  B  \tab\tab\tab Leontief Inverse matrix \eqn{(I - A)^{-1}}. \cr
+#'  Lb \tab\tab\tab List of \code{G} domestic (local) Leontief Inverse blocks \eqn{(I - A_{gg})^{-1}}, one \code{N x N} matrix per country. \cr
 #'  E  \tab\tab\tab Total Exports (output of each country-industry servicing foreign production or foreign final demand). \cr
 #'  ESR \tab\tab\tab Total Exports by destination country. \cr
-#'  Eint \tab\tab\tab Exports for intermediate production by destination country. \cr
-#'  Efd \tab\tab\tab Exports for final demand by destination country. \cr
 #'  Vc \tab\tab\tab Value added content of output (\code{v / o}). \cr
 #'  G \tab\tab\tab Number of countries. \cr
 #'  N \tab\tab\tab Number of industries. \cr
 #'  GN \tab\tab\tab Number of country-industries. \cr
-#'  k \tab\tab\tab Vector of country names. \cr  
+#'  k \tab\tab\tab Vector of country names. \cr
 #'  i \tab\tab\tab Vector of industry names. \cr
-#'  rownam \tab\tab\tab Unique country-industry names identifying the rows / columns of x and rows of y. \cr
 #'  X \tab\tab\tab Total Output (\code{ = o}). \cr
-#'  Y \tab\tab\tab Total Final Demand by destination country. \cr 
+#'  Y \tab\tab\tab Total Final Demand by destination country. \cr
 #'  Yd \tab\tab\tab Domestic Final Demand. \cr
 #'  Ym \tab\tab\tab Foreign Final Demand. \cr
 #'  }
+#'  The country-industry names identifying the rows and columns are available as \code{names(x$Vc)}
+#'  or \code{dimnames(x$B)[[1L]]}.
+#' @section Changes in version 8.0.0:
+#'  The object was reduced from five dense \code{GN x GN} matrices to two. The fields \code{Am},
+#'  \code{Bd}, \code{Bm} and \code{L} were masked or block-diagonal copies of \code{A} and \code{B}
+#'  and have been removed, as have \code{Eint}, \code{Efd} and \code{rownam}. \code{A} is now stored
+#'  in full (previously only \code{Am}, with the domestic blocks zeroed, was kept), and the
+#'  block-diagonal domestic Leontief inverse is stored as the \code{G} blocks \code{Lb} it consists
+#'  of rather than as a dense matrix that is 1 - 1/G zeros. The decomposition functions derive
+#'  whatever masked forms they need. Code that used the removed fields can recover them with
+#'  \code{Am <- A; Bd <- matrix(0, GN, GN); Bm <- B; L <- matrix(0, GN, GN)} and, for each country
+#'  block \code{bg}, \code{Am[bg, bg] <- 0; Bd[bg, bg] <- B[bg, bg]; Bm[bg, bg] <- 0;
+#'  L[bg, bg] <- Lb[[g]]}; further \code{Efd} equals \code{Ym} and \code{Eint} equals
+#'  \code{ESR - Ym}.
 #' @author Bastiaan Quast
 #' @details Adapted from code by Fei Wang.
 #' @export
@@ -104,9 +113,8 @@ load_tables_vectors <- function(iot, x, y, k, i, o = NULL, v = NULL,
     ## (e.g. in a for-loop) filled
     ## For matrix copies, no need for setting the dimensions,
     ## only increases the memory burden
-    Bd <- Ad <- matrix(0, nrow = GN, ncol = GN)
-    Yd <- ESR <- Eint <- Efd <- Y <- matrix(0, nrow = GN, ncol = G)
-    
+    Yd <- ESR <- Y <- matrix(0, nrow = GN, ncol = G)
+
     # o can be computed...
     if (is.null(o)) {
       o <- rowSums(x) + rowSums(y)
@@ -130,29 +138,29 @@ load_tables_vectors <- function(iot, x, y, k, i, o = NULL, v = NULL,
     # A <- x / outer(rep.int(1L, GN), o) # Significantly faster than:  t(t(x) / o)
     A <- .Call(C_rowmult, x, 1 / o)
     A[!is.finite(A)] <- 0
-    Am <- A
 
-    II <- diag(GN)
-    Bm <- B <- solve(II - A)
-    
+    ## B = (I - A)^-1. Forming (I - A) in place avoids allocating a GN x GN identity matrix.
+    IA <- -A
+    diag(IA) <- diag(IA) + 1
+    B <- solve(IA)
+    rm(IA)
+
+    ## The domestic economy Leontief inverse is block-diagonal: store the G blocks it consists of
+    ## rather than a dense GN x GN matrix that is (1 - 1/G) zeros. G small solves instead of one
+    ## large one, which is also two orders of magnitude faster than solve(I - Ad).
+    IN <- diag(N)
+    Lb <- vector("list", G)
     for (j in 1:G) {
-        m = 1L + (j - 1L) * N
-        n = N + (j - 1L) * N
-
-        ## set diagonal
-        Ad[m:n, m:n] <- A[m:n, m:n]
-        Bd[m:n, m:n] <- B[m:n, m:n]
-
-        ## delete diagonal
-        Bm[m:n, m:n] <- 0
-        Am[m:n, m:n] <- 0
+        m <- 1L + (j - 1L) * N
+        n <- N + (j - 1L) * N
+        Lb[[j]] <- solve(IN - A[m:n, m:n])
     }
-    
-    L <- solve(II - Ad)
+    rm(IN)
+
     Vc <- v / o
     Vc[!is.finite(Vc)] <- 0
     ## Vhat <- diag(Vc)
-    
+
     ## Part 2: computing final demand: Y
     if(fdc > 1L) {
         for (j in 1:G) {
@@ -170,41 +178,25 @@ load_tables_vectors <- function(iot, x, y, k, i, o = NULL, v = NULL,
     
     
     ## Part 3: computing export: E, Esr
-    E <- cbind(x, y) # This is also expensive with large matrices. Would be nice if it could be avoided
+    ## Exports for final demand are just the foreign part of Y, so ESR is assembled directly from
+    ## x and Y. This avoids materializing the masked cbind(x, y) the previous versions built.
     for (j in 1:G) {
         m <- 1L + (j - 1L) * N
         n <- N + (j - 1L) * N
-        
-        s <- GN + 1L + (j - 1L) * fdc
-        r <- GN + fdc + (j - 1L) * fdc
-        
-        E[m:n, m:n] <- 0  ## intermediate demand for domestic goods
-        E[m:n, s:r] <- 0  ## final demand for domestic goods
 
         Yd[m:n, j] <- Y[m:n, j]
         Ym[m:n, j] <- 0
+
+        ## intermediate exports to j, excluding j's demand for its own goods
+        ESR[, j] <- rowSums2(x, cols = m:n)
+        ESR[m:n, j] <- 0
     }
-    
-    z <- E
-    E <- rowSums(E) # Not necessary to have a matrix here, I changed the code in wwz.R
 
-    for (j in 1:G) {
-        m <- 1L + (j - 1L) * N
-        n <- N + (j - 1L) * N
-        s <- GN + 1L + (j - 1L) * fdc
-        r <- GN + fdc + (j - 1L) * fdc
+    ## total exports by destination = intermediate exports + final goods exports (= Ym)
+    ESR <- ESR + Ym
+    E <- rowSums2(ESR)
 
-        ## Final goods exports
-        Efd[, j] <- if (s == r) z[, s] else rowSums2(z, cols = s:r)
 
-        ## intermediate exports
-        Eint[, j] <- rowSums2(z, cols = m:n)
-
-        ## Total exports
-        ESR[, j] <- Eint[, j] + Efd[, j]
-    }
-    
-    
     ## Part 4: naming the rows and columns in variables
     names(Vc) <- rownam
     names(o) <- rownam
@@ -214,29 +206,18 @@ load_tables_vectors <- function(iot, x, y, k, i, o = NULL, v = NULL,
     dimnames(Yd) <- dny
     dimnames(Ym) <- dny
     dimnames(ESR) <- dny
-    dimnames(Eint) <- dny
-    dimnames(Efd) <- dny
-    dnx <- list(rownam, rownam) 
-    dimnames(Am) <- dnx
-    ## dimnames(Ad) <- dnx
-    ## dimnames(A) <- dnx
+    dnx <- list(rownam, rownam)
+    dimnames(A) <- dnx
     dimnames(B) <- dnx
-    dimnames(Bd) <- dnx
-    dimnames(Bm) <- dnx
-    dimnames(L) <- dnx
-    
-    ## Part 5: creating decompr object
-    out <- list(Am = Am,
-                ## Ad = Ad, ## never used
-                ## A = A, ## never used
-                B = B,                  # leontief
-                Bd = Bd,                # wwz
-                Bm = Bm,                # wwz
-                L = L,
+
+    ## Part 5: creating decompr object. Only A and B are dense GN x GN: the masked (Am, Bm) and
+    ## block-diagonal (Bd, L) variants earlier versions stored are derived by the decompositions
+    ## that need them -- see the 'Changes in version 8.0.0' section above.
+    out <- list(A = A,                  # kww, wwz, bm
+                B = B,                  # leontief, kww, bm
+                Lb = Lb,                # kww, wwz, bm
                 E = E,
                 ESR = ESR,
-                Eint = Eint,
-                Efd = Efd,
                 Vc = Vc,
                 ## fdc = fdc, ## never used
 
@@ -245,18 +226,13 @@ load_tables_vectors <- function(iot, x, y, k, i, o = NULL, v = NULL,
                 N = N,
                 GN = GN,
                 k = k,
-                i = i, 
-                
-                rownam = rownam,
-                ## bigrownam = bigrownam,
-                ## Vhat = Vhat,
+                i = i,
+
                 X = o,                  # leontief
                 Y = Y,                  # leontief
                 Yd = Yd,
                 Ym = Ym)
-    ## z = z,
-    ## z01 = z01, z02 = z02)
-    
+
     class(out) <- "decompr"
     
     ## Part 6: returning object

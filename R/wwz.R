@@ -58,9 +58,28 @@ wwz <- function(x, verbose = FALSE) {
     if(!inherits(x, "decompr")) stop("x must be an object of class 'decompr' created by the load_tables_vectors() function.")
     
     # This loads all the elements into the current function namespace, and avoids 165 calls to x$... some of which are done inside loops.
-    GN <- G <- ESR <- Eint <- Efd <- Bd <- Vc <- Ym <- L <- Am <- Yd <- N <- Bm <- X <- E <- k <- i <- NULL # First need to initialize as NULL to avoid R CMD check error. 
+    GN <- G <- ESR <- Vc <- Ym <- Lb <- A <- B <- Yd <- N <- X <- E <- k <- i <- NULL # First need to initialize as NULL to avoid R CMD check error.
     list2env(x, environment())
-    
+
+    ## Unlike the other decompositions, WWZ works with the masked matrices throughout (it uses them
+    ## in dense GN x GN products, so there is nothing to gain from a blockwise formulation). Since
+    ## version 8.0.0 the 'decompr' object no longer carries them, so they are rebuilt here from A
+    ## and B. The block-diagonal L is not needed densely and is used via Lb below.
+    Am <- A
+    Bd <- matrix(0, nrow = GN, ncol = GN)
+    Bm <- B
+    for (r in 1:G) {
+        q <- (r - 1L) * N
+        mn <- (1L + q):(N + q)
+        Am[mn, mn] <- 0
+        Bd[mn, mn] <- B[mn, mn]
+        Bm[mn, mn] <- 0
+    }
+    ## Final goods exports by destination are the foreign part of final demand; the remainder of
+    ## exports by destination is intermediate.
+    Efd  <- Ym
+    Eint <- ESR - Ym
+
     ## Part 1: Decomposing Export into VA (16 items) defining ALL to
     ## contain all decomposed results
     ALL <- array(0, dim = c(GN, G, 19L))
@@ -122,15 +141,23 @@ wwz <- function(x, verbose = FALSE) {
     ## DVA_INT: DVA in intermediate exports used by direct importer (r) to produce local final products
     ## 
 
-    VsLss <- Vc * L
+    ## VsLss = Vc * L is block-diagonal, so both its column sums and its product with ESR are
+    ## formed one country block at a time from Lb (no dense GN x GN intermediate).
+    VsLss_colSums <- numeric(GN)
+    DViX_Fsr <- matrix(0, nrow = GN, ncol = G)
+    for (r in 1:G) {
+        q <- (r - 1L) * N
+        mn <- (1L + q):(N + q)
+        VsLss_r <- Vc[mn] * Lb[[r]]
+        VsLss_colSums[mn] <- colSums(VsLss_r)
+        DViX_Fsr[mn, ] <- VsLss_r %*% ESR[mn, , drop = FALSE]
+    }
     ## try to calculate DViX_Fsr
-    DViX_Fsr <- t(VsLss %*% ESR)
+    DViX_Fsr <- t(DViX_Fsr)
     dim(DViX_Fsr) <- NULL
-    
+
     ## Term 2
-    VsLss_colSums <- colSums(VsLss)
-    rm(VsLss)
-    
+
     ALL[, , 2L] <- Am %*% Bd %*% Yd * VsLss_colSums
 
     if(verbose) {
@@ -358,7 +385,14 @@ wwz <- function(x, verbose = FALSE) {
     ## Sum(VtBts)#AsrLrrYrr ] OK !
 
     # YYrr <- matrix(0, nrow = GN, ncol = GN)
-    Am_L_t <- t(Am %*% L)
+    Am_L <- Am                          # Am %*% L, column block by column block (L block-diagonal)
+    for (r in 1:G) {
+        q <- (r - 1L) * N
+        mn <- (1L + q):(N + q)
+        Am_L[, mn] <- Am[, mn, drop = FALSE] %*% Lb[[r]]
+    }
+    Am_L_t <- t(Am_L)
+    rm(Am_L)
     for (r in 1:G) {
         q <- (r - 1L) * N
         mn <- (1L + q):(N + q) 
