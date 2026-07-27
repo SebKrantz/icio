@@ -1,3 +1,40 @@
+decompr 8.0.0
+=======================
+
+**Breaking change**: the 'decompr' object returned by `load_tables_vectors()` has been reduced.
+It carried five dense `GN x GN` matrices, but only two of them held independent information --
+`Am`, `Bd`, `Bm` and `L` were masked or block-diagonal copies of the input coefficients and of the
+Leontief inverse. `Bd` and `L` were additionally stored dense despite being block-diagonal, so at
+`G` countries they were `1 - 1/G` structural zeros (98% at `G = 50`).
+
+* The object now stores the **full** input coefficient matrix `A` (previously only `Am`, with the
+  domestic blocks zeroed, was kept -- which forced `bm()` to reconstruct `A` on every call) and the
+  domestic Leontief inverse as the list `Lb` of the `G` local `N x N` blocks it consists of, rather
+  than as a dense `GN x GN` matrix. The fields `Am`, `Bd`, `Bm`, `L`, `Eint`, `Efd` and `rownam`
+  were removed; `rownam` was not used by any decomposition and is still available as
+  `names(x$Vc)`. `A`, `B`, `Lb`, `E`, `ESR`, `Vc`, `G`, `N`, `GN`, `k`, `i`, `X`, `Y`, `Yd` and
+  `Ym` are unchanged or new. See `?load_tables_vectors` for how to recover the removed fields.
+
+* The decomposition functions derive whatever masked forms they need. `leontief()`, `kww()` and
+  `bm()` now work entirely off the diagonal blocks of `B` and off `Lb`, without ever materializing
+  a dense `Bd`, `Bm` or `L`. `wwz()`, which uses the masked matrices in dense products throughout,
+  rebuilds `Am`, `Bd` and `Bm` on entry.
+
+* `kww()` is **substantially faster**: re-associating `Bm %*% Am %*% L %*% Z` as
+  `Bm %*% (Am %*% (L %*% Z))`, with `Z` having only `G` columns, removes two `GN x GN x GN` matrix
+  products. On a 2000 x 2000 table it went from 10.3 to 0.6 seconds. A dead `Vc * B` allocation was
+  also removed.
+
+* `load_tables_vectors()` is faster and allocates far less: the block-diagonal `L` is obtained from
+  `G` small solves instead of one dense `solve(I - Ad)` (two orders of magnitude cheaper for an
+  identical result), exports by destination are assembled from `x` and `Y` directly instead of from
+  a masked `cbind(x, y)` copy, and forming `I - A` in place avoids a `GN x GN` identity matrix.
+
+  On a 50-country, 40-industry table the object went from 160 MB to 66 MB and construction from
+  5.2 to 4.1 seconds. All decompositions reproduce their 7.0.0 results to within 3e-12 relative.
+
+* The complimentary 'gvc' package is unaffected: it only uses `G`, `N`, `GN`, `k`, `i` and `X`.
+
 decompr 7.0.0
 =======================
 * Added the Borin-Mancini (2019) decomposition via the new `bm()` function (also available
