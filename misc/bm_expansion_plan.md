@@ -1,4 +1,10 @@
-# Expand `decompr::bm()` to the full Borin–Mancini (2019) variant surface
+# Expand `icio::bm()` to the full Borin–Mancini (2019) variant surface
+
+> **Historical.** Written when the package was still called `decompr` and before the object was
+> reduced (`decompr 8.0.0`). The plan has been carried out: `bm()` supports the full variant
+> surface, and the "Field mapping" section below is out of date -- the object now stores the
+> **full** `A` and the local Leontief blocks `Lb`, so nothing has to be reconstructed. Kept as a
+> record of the Julia↔R mapping; see `?bm` and `?load_icio` for the current state.
 
 ## Goal
 
@@ -47,10 +53,10 @@ every variant.
 world-source/self VAX are **not** deferred here — they are all delivered except `sectimp`
 (same deferral as Julia: throw a clear "not implemented" error).
 
-## Field mapping: Julia `ICIOModel` → decompr object
+## Field mapping: Julia `ICIOModel` → icio object
 
-The decompr object (from `load_tables_vectors`) already carries almost everything. The one gap:
-Julia uses the **full** coefficient matrix `A` (incl. domestic blocks), while decompr stores only
+The icio object (from `load_icio`) already carries almost everything. The one gap:
+Julia uses the **full** coefficient matrix `A` (incl. domestic blocks), while icio stores only
 `Am` (foreign `A`, domestic blocks zeroed). Reconstruct the full `A` cheaply from the
 block-diagonal local Leontief `L`:
 
@@ -61,7 +67,7 @@ A    = Am; for g: A[g-block, g-block] <- A_gg     # foreign blocks already in Am
 
 (G cheap N×N inverses — much cheaper than reinverting `B`.) Then:
 
-| Julia field / helper | decompr / bm.R |
+| Julia field / helper | icio / bm.R |
 |----------------------|----------------|
 | `G,N,GN`             | `G,N,GN` |
 | `X` (output)         | `X` (= o) |
@@ -85,7 +91,7 @@ A    = Am; for g: A[g-block, g-block] <- A_gg     # foreign blocks already in Am
 
 Refactor the monolithic `bm()` into a **dispatcher + shared prep + one engine per variant**,
 each engine a faithful port of the matching Julia function. All internal (`.bm_*`), un-exported,
-kept in `bm.R` (decompr keeps one file per decomposition).
+kept in `bm.R` (icio keeps one file per decomposition).
 
 * `bm(x, aggregation, perspective, approach, flow)` — validate the combination (clear errors
   listing valid options per `flow`), build prep, route, assemble `data.frame` (`attr =

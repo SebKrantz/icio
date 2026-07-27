@@ -1,41 +1,30 @@
-* checking CRAN incoming feasibility ... [11s] NOTE
-Maintainer: 'Bastiaan Quast <bquast@gmail.com>'
+# Submission
 
-Possibly misspelled words in DESCRIPTION:
-  Borin (9:66, 23:5)
+This is the first submission of `icio`.
 
+`icio` is a rename and consolidation of the CRAN package `decompr`, whose maintainer
+(Bastiaan Quast) is no longer active. I am a co-author of `decompr` and am taking the
+package over under the new name; Bastiaan Quast and the other `decompr` authors are
+retained as authors. `decompr` remains on CRAN and is unaffected by this submission.
 
->>> Borin is a name
+The name `icio` refers to inter-country input-output tables and matches the Stata `icio`
+command (Belotti, Borin and Mancini, Stata Journal 2021) whose decompositions the package
+reproduces.
+
+Possibly misspelled words in DESCRIPTION are surnames (Borin, Mancini, Koopman, Hummels,
+Ishii, Yi, Zhu) and the abbreviation ICIO.
 
 
 # Test environments
 
-- local Windows 11 install, R 4.6.0
-- local Linux (Fedora) install, R 4.6.0
 - local macOS install, R 4.6.0
 - GitHub Actions
    - Windows Server, R release
-   - MacOS, R release
-   - MacOS, R dev
+   - macOS, R release
+   - macOS, R devel
    - Ubuntu, R release
-- win-builder
-   - devel
-   - release
 
 
 # R CMD check
 
-R CMD check succeeded
-
-── R CMD check results ──────────────── decompr 6.9.0 ────
-Duration: 22.6s
-
-0 errors ✔ | 0 warnings ✔ | 0 notes ✔
-
-R CMD check succeeded
-
-
-# win-builder
-
-* DONE
-Status: OK
+0 errors | 0 warnings | 0 notes

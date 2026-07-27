@@ -1,7 +1,7 @@
-url: https://bquast.github.io/decompr/
+url: https://sebkrantz.github.io/icio/
 
 home:
-  title: Global Value Chain Decomposition
+  title: Global Value Chain Decomposition of Inter-Country Input-Output Tables
 
 template:
   bootstrap: 5
@@ -17,7 +17,7 @@ development:
   mode: auto
 
 navbar:
-  title: decompr
+  title: icio
   structure:
     left:
     - reference
@@ -38,19 +38,19 @@ navbar:
       href: news/index.html
     github:
       icon: fa-github
-      href: https://github.com/bquast/decompr
+      href: https://github.com/SebKrantz/icio
       aria-label: GitHub
 
 reference:
 
 - contents:
-  - decompr-package
+  - icio-package
 
 - title: "Data Input"
-  desc: "Parse raw ICIO table matrices into a `decompr` class object."
+  desc: "Parse raw ICIO table matrices, or the Stata `icio` CSV format, into an `icio` class object."
 - contents:
-  - load_tables_vectors
-  - load_tables
+  - load_icio
+  - load_icio_csv
 
 - title: "Leontief Decomposition"
   desc: "Derive the value-added origin of exports by country and industry (Hummels, Ishii & Yi 2001)."
@@ -74,7 +74,7 @@ reference:
   - bm
 
 - title: "Convenience Interface"
-  desc: "High-level wrapper for running any decomposition with a single call."
+  desc: "Run any decomposition with a single call, also across several ICIO tables (e.g. one per year)."
 - contents:
   - decomp
 
@@ -84,9 +84,9 @@ reference:
   - leather
 
 articles:
-- title: Introduction to decompr
+- title: Introduction to icio
   desc: >
     Walk-through of the main workflow: loading ICIO tables, running all four
     decompositions, and interpreting the value-added components.
   contents:
-  - decompr
+  - icio

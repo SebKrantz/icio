@@ -1,11 +1,14 @@
 # load the package
-library(decompr)
+library(icio)
 
 # load test data
 data(leather)
 list2env(leather, environment())
 
-dec <- load_tables_vectors(leather)
+dec <- load_icio(leather)
+
+# base-R column selection: `DT[cols]` does not subset columns in data.table
+cols <- function(d, x) as.data.frame(d)[x]
 
 context("bm output format")
 
@@ -30,9 +33,23 @@ test_that("identifier columns are factors and terms are double", {
 })
 
 test_that("decomp() interface dispatches to bm", {
-  d <- decomp(x = inter, y = final, k = countries, i = industries, o = out,
-              method = "bm", aggregation = "sector")
+  d <- decomp(dec, aggregation = "sector")          # bm is the default method
   expect_equal(d$GVC, sec$GVC)
+  expect_equal(decomp(dec, method = "bm", aggregation = "sector"), d)
+})
+
+test_that("decomp() stacks a list of 'icio' objects", {
+  st <- decomp(list(`2015` = dec, `2016` = dec), aggregation = "sector", idcol = "Year")
+  expect_equal(dim(st), c(2L * nrow(sec), ncol(sec) + 1L))
+  expect_identical(names(st)[1L], "Year")
+  expect_identical(unique(st$Year), c("2015", "2016"))
+  expect_equal(st$GVC, rep(sec$GVC, 2L))
+  expect_false("Label" %in% names(decomp(list(dec, dec), idcol = NULL)))
+})
+
+test_that("decomp() rejects raw tables and non-'icio' input", {
+  expect_error(decomp(leather), "must be an 'icio' object")
+  expect_error(decomp(list(dec, 1)), "must be an 'icio' object")
 })
 
 context("bm accounting identities")
@@ -55,7 +72,7 @@ test_that("no negative GVC or gross exports", {
 context("bm additivity")
 
 test_that("bilateral sums to sector", {
-  agg <- aggregate(bil[c("GEXP", "DVA", "FVA", "DAVAX", "GVC")],
+  agg <- aggregate(cols(bil, c("GEXP", "DVA", "FVA", "DAVAX", "GVC")),
                    list(Exporting_Country = bil$Exporting_Country,
                         Exporting_Industry = bil$Exporting_Industry), sum)
   agg <- agg[order(agg$Exporting_Country, agg$Exporting_Industry), ]
@@ -65,7 +82,7 @@ test_that("bilateral sums to sector", {
 })
 
 test_that("sector sums to country", {
-  agg <- aggregate(sec[c("GEXP", "DVA", "FVA", "GVC")],
+  agg <- aggregate(cols(sec, c("GEXP", "DVA", "FVA", "GVC")),
                    list(Exporting_Country = sec$Exporting_Country), sum)
   for (cl in c("GEXP", "DVA", "FVA", "GVC"))
     expect_equal(cty[[cl]], agg[[cl]], tolerance = 1e-8)
@@ -92,8 +109,8 @@ context("bm value-added zeroing")
 test_that("only the origin country has positive domestic value added", {
   va <- out - colSums(inter)
   va[4:9] <- 0  # keep only Argentina's value added (country-sectors 1:3)
-  s.arg <- decomp(x = inter, y = final, k = countries, i = industries, o = out, v = va,
-                  method = "bm", aggregation = "sector")
+  s.arg <- decomp(load_icio(inter, final, countries, industries, output = out, va = va),
+                  aggregation = "sector")
   expect_true(all(s.arg$DVA[1:3] > 0))   # Argentina
   expect_true(all(s.arg$DVA[4:9] == 0))  # Turkey and Germany
 })
@@ -143,7 +160,7 @@ test_that("identities hold for every new export variant", {
 context("bm extended variants: cross-engine anchors")
 
 test_that("exporter/sink aggregates over importers to exporter/source (country totals)", {
-  agg <- aggregate(seck[c("DVA","FVA","VAX","REF")],
+  agg <- aggregate(cols(seck, c("DVA","FVA","VAX","REF")),
                    list(Exporting_Country = seck$Exporting_Country), sum)
   for (cl in c("DVA","FVA","VAX","REF")) expect_equal(cty[[cl]], agg[[cl]], tolerance = 1e-8)
   expect_equal(seck$DC, sec$DC, tolerance = 1e-8)               # DC/FC perimeter-invariant
@@ -173,7 +190,7 @@ test_that("self perimeter dominates the exporter DVA (eq. 46) and shares DC", {
 
 test_that("imports are world-consistent and additive over origin", {
   expect_equal(sum(impc$GIMP), sum(cty$GEXP), tolerance = 1e-8)
-  agg <- aggregate(impb[c("VA","DC")], list(Importing_Country = impb$Importing_Country), sum)
+  agg <- aggregate(cols(impb, c("VA","DC")), list(Importing_Country = impb$Importing_Country), sum)
   expect_equal(impc$VA, agg$VA, tolerance = 1e-8)
   expect_equal(impc$DC, agg$DC, tolerance = 1e-8)
 })

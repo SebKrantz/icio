@@ -2,56 +2,38 @@
 % Please edit documentation in R/decomp.R
 \name{decomp}
 \alias{decomp}
-\title{Interface Function for Decompositions}
+\title{Run a GVC Decomposition}
 \usage{
-decomp(
-  iot,
-  x,
-  y,
-  k,
-  i,
-  o = NULL,
-  v = NULL,
-  method = c("leontief", "kww", "wwz", "bm"),
-  ...
-)
+decomp(x, method = c("bm", "leontief", "kww", "wwz"), ..., idcol = "Label")
 }
 \arguments{
-\item{iot}{a Input Output Table object - a list with elements 'inter' (= x), 'final' (= y), 'output' (= o), 'countries' (= k) and 'industries' (= i) of class 'iot'. 
-Alternatively these objects can be passed directly to the function, at least x, y, k and i need to be supplied.}
+\item{x}{an 'icio' class object from \code{\link{load_icio}} or \code{\link{load_icio_csv}}, or a
+(preferably named) list of such objects, e.g. one ICIO table per year.}
 
-\item{x}{intermediate demand table supplied as a numeric matrix of dimensions GN x GN (G = no. of country, N = no. of industries). 
-Both rows and columns should be arranged first by country, then by industry (e.g. C1I1, C1I2, ..., C2I1, C2I2, ...) and should match (symmetry), 
-such that rows and columns refer to the same country-industries.}
+\item{method}{character. The decomposition method: \code{"bm"} (the default and recommended
+method, see \code{\link{bm}}), \code{"leontief"}, \code{"kww"} or \code{"wwz"}.}
 
-\item{y}{final demand table supplied as a numeric matrix of dimensions GN x MN (M = no. of final demand categories recorded for each country). 
-The rows of y need to match the rows of x, and the columns should also be arranged first by country, then by final demand category (e.g. C1FD1, C1FD2, ..., C2FD1, C2FD2, ...) with the order of the 
-countries the same as in x.}
+\item{\dots}{further arguments passed to \code{\link{bm}}, \code{\link{leontief}},
+\code{\link{kww}} or \code{\link{wwz}}.}
 
-\item{k}{character. A vector of country or region names of length G, arranged in the same order as they occur in the rows and columns of x, y.}
-
-\item{i}{character. A vector of country or region names of length N, arranged in the same order as they occur in the rows and columns of x and rows of y.}
-
-\item{o}{numeric. A vector of final outputs for each country-industry matching the rows of x and y. If not provided it will be computed as \code{rowSums(x) + rowSums(y)}.}
-
-\item{v}{numeric. A vector of value added for each country-industry matching the columns of x. If not provided it will be computed as \code{o - colSums(x)}.}
-
-\item{method}{character. The decomposition method, either \code{"leontief"}, \code{"kww"}, \code{"wwz"} or \code{"bm"}.}
-
-\item{\dots}{further arguments passed to \code{\link{leontief}}, \code{\link{kww}}, \code{\link{wwz}} or \code{\link{bm}}.}
+\item{idcol}{character. Only used if \code{x} is a list: the name of the identifier column
+prepended to the stacked result. It holds the names of \code{x}, or the list indices if \code{x}
+is unnamed. Set to \code{NULL} to omit it.}
 }
 \value{
-Depends on the decomposition, see \code{\link{leontief}}, \code{\link{kww}}, \code{\link{wwz}} or \code{\link{bm}}.
- % The output when using the WWZ algorithm is a matrix with dimensions GNG*19.
- % Whereby 19 is the 16 objects the WWZ algorithm decomposes exports into, plus three checksums.
- % GNG represents source country, using industry and using country.
+A \code{data.table} - see \code{\link{bm}}, \code{\link{leontief}}, \code{\link{kww}} or
+\code{\link{wwz}} for the columns of each decomposition. If \code{x} is a list, the results are
+stacked with \code{\link[data.table]{rbindlist}} and prefixed with \code{idcol}.
 }
 \description{
-This function loads an ICIO table and runs a specified decomposition. It provides a compact interface for quick analysis.
+A compact interface to the four decompositions: it dispatches on \code{method} and, given a list
+of 'icio' objects (e.g. one per year), runs the decomposition on each and stacks the results.
 }
 \details{
-For more detailed analysis with multiple decompositions consider using 
-\code{\link{load_tables_vectors}} to create a 'decompr' class object and then run the decomposition functions \code{\link{leontief}}, \code{\link{kww}} and \code{\link{wwz}} on the object.
+Building an 'icio' object is by far the most expensive step (it involves inverting a
+\code{GN x GN} matrix), so it is done once by \code{\link{load_icio}} and reused across
+decompositions. Pass the object to \code{\link{bm}}, \code{\link{leontief}}, \code{\link{kww}} or
+\code{\link{wwz}} directly if you prefer.
 }
 \examples{
 # Load leather example data
@@ -60,30 +42,35 @@ data(leather)
 # Explore the data
 str(leather)
 
+# Create the 'icio' object
+m <- load_icio(leather)
+
 ## Decomposing gross exports:
 
-# Perform the Leontief decomposition
-decomp(leather, method = "leontief")
+# Borin-Mancini (2019), the recommended method
+decomp(m)
+decomp(m, aggregation = "bilateral")
 
-# Perform the KWW decomposition
-decomp(leather, method = "kww")
+# Leontief, Koopman-Wang-Wei and Wang-Wei-Zhu
+decomp(m, method = "leontief")
+decomp(m, method = "kww")
+decomp(m, method = "wwz")
 
-# Perform the WWZ decomposition
-decomp(leather, method = "wwz")
-
-# Perform the Borin-Mancini decomposition
-decomp(leather, method = "bm")
-decomp(leather, method = "bm", aggregation = "bilateral")
-
+# Multiple tables at once, e.g. one per year, stacked with a 'Year' column
+decomp(list(`2015` = m, `2016` = m), idcol = "Year")
 }
 \references{
-{Timmer, Marcel P. (ed) (2012), "The World Input-Output Database (WIOD): Contents Sources and Methods", \emph{WIOD Working Paper Number 10}, downloadable at http://www.wiod.org/publications/papers/wiod10.pdf }
+Hummels, D., Ishii, J., & Yi, K. M. (2001). The nature and growth of vertical specialization in world trade. \emph{Journal of international Economics, 54}(1), 75-96.
 
-{Wang, Zhi, Shang-Jin Wei, and Kunfu Zhu (2013). Quantifying international production sharing at the bilateral and sector levels. \emph{No. w19677. National Bureau of Economic Research}.}
+Koopman, R., Wang, Z., & Wei, S. J. (2014). Tracing value-added and double counting in gross exports. \emph{American Economic Review, 104}(2), 459-94.
+
+Wang, Zhi, Shang-Jin Wei, and Kunfu Zhu (2013). Quantifying international production sharing at the bilateral and sector levels (No. w19677). \emph{National Bureau of Economic Research}.
+
+Borin, A., & Mancini, M. (2019). Measuring What Matters in Global Value Chains and Value-Added Trade. \emph{World Bank Policy Research Working Paper 8804}.
 }
 \seealso{
-\code{\link{decompr-package}}
+\code{\link{load_icio}}, \code{\link{bm}}, \code{\link{icio-package}}
 }
 \author{
-Bastiaan Quast
+Sebastian Krantz, Bastiaan Quast
 }

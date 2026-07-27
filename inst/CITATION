@@ -1,18 +1,18 @@
-bibentry(bibtype      = "Article",
-         title        = "decompr: Global Value Chain decomposition in R",
-         author       = c(person("Bastiaan", "Quast"),
-                          person("Victor", "Kummritz") ),
-         organization = "The Graduate Institute",
-		     address      = "Maison de la paix, Geneva, Switzerland",
-         year         = "2015",
-         journal      = "CTEI Working Papers",
-         number       = "1",
-         url          = "https://bastiaanquast.com/decompr/",
-         textVersion  = "Quast, B.A. and V. Kummritz (2015). decompr: Global Value Chain decomposition in R. CTEI Working Papers, 1.",
-		 
-		 
-		mheader       = "To cite decompr in publications please use:",
+bibentry(bibtype     = "Manual",
+         title       = "icio: Global Value Chain Decomposition of Inter-Country Input-Output Tables",
+         author      = c(person("Sebastian", "Krantz"),
+                         person("Bastiaan", "Quast")),
+         year        = "2026",
+         note        = "R package version 1.0.0",
+         url         = "https://github.com/SebKrantz/icio",
+         textVersion = paste("Krantz, S. and B. Quast (2026).",
+                             "icio: Global Value Chain Decomposition of Inter-Country Input-Output Tables.",
+                             "R package version 1.0.0. https://github.com/SebKrantz/icio"),
 
-		mfooter       = "We have invested a lot of time and effort in creating decompr, please cite it when using it for data analysis. See also 'citation()' for citing R."
-		
+         mheader     = "To cite icio in publications please use:",
+
+         mfooter     = paste("The Borin-Mancini decomposition implemented in bm() follows",
+                             "Borin and Mancini (2019) and the Stata 'icio' command",
+                             "(Belotti, Borin and Mancini 2021); please cite these as well",
+                             "when using it. See also 'citation()' for citing R.")
 )

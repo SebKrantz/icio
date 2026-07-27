@@ -7,10 +7,10 @@
 kww(x)
 }
 \arguments{
-\item{x}{an object of the class 'decompr' obtained from \code{\link{load_tables_vectors}}.}
+\item{x}{an object of the class 'icio' obtained from \code{\link{load_icio}}.}
 }
 \value{
-A data frame where a country's gross exports is decomposed into 9 components (columns), as detailed in Figure 1 of the AER paper:
+A \code{data.table} where a country's gross exports is decomposed into 9 components (columns), as detailed in Figure 1 of the AER paper:
  \tabular{ll}{
  \emph{Term} \tab \emph{Description} \cr
  \code{DVA_FIN} \tab Domestic VA in final goods exports. \cr
@@ -43,11 +43,11 @@ perspective for the foreign content of exports; this corrected KWW decomposition
 # Load example data
 data(leather)
 
-# Create intermediate object (class 'decompr')
-decompr_object <- load_tables_vectors(leather)
+# Create intermediate object (class 'icio')
+m <- load_icio(leather)
  
 # Perform the KWW decomposition
-kww(decompr_object)
+kww(m)
 
 }
 \references{
@@ -56,7 +56,7 @@ Koopman, R., Wang, Z., & Wei, S. J. (2014). Tracing value-added and double count
 Borin, A., & Mancini, M. (2019). Measuring What Matters in Global Value Chains and Value-Added Trade. \emph{World Bank Policy Research Working Paper 8804}.
 }
 \seealso{
-\code{\link{bm}}, \code{\link{wwz}}, \code{\link{wwz2kww}}, \code{\link{decompr-package}}
+\code{\link{bm}}, \code{\link{wwz}}, \code{\link{wwz2kww}}, \code{\link{icio-package}}
 }
 \author{
 Sebastian Krantz

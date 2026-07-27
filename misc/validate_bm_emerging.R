@@ -1,4 +1,4 @@
-# Validate decompr::bm() on the EMERGING ICIO data against GlobalValueChains.jl (Julia), whose
+# Validate icio::bm() on the EMERGING ICIO data against GlobalValueChains.jl (Julia), whose
 # output is itself validated to ~1e-6 against the Stata `icio` command. The two implementations
 # share the same algorithm, so they should agree to ~1e-12 (double precision).
 #
@@ -9,7 +9,7 @@
 #   Rscript misc/validate_bm_emerging.R
 
 suppressMessages({
-  devtools::load_all("/Users/sebastiankrantz/Documents/R/decompr", quiet = TRUE)
+  devtools::load_all(quiet = TRUE)   # run from the package root
   library(qs2); library(data.table)
 })
 
@@ -20,7 +20,7 @@ yr   <- 2015L
 EM  <- qs_read(qs2f)
 d   <- EM$DATA[[as.character(yr)]]
 # residual VA (no o/v) -> matches icio / GlobalValueChains.jl read_icio_csv
-dec <- load_tables_vectors(x = d$T, y = d$FD, k = EM$Regions$ISO3, i = EM$Sectors$Broad_Sector_Code)
+dec <- load_icio(d$T, d$FD, EM$Regions$ISO3, EM$Sectors$Broad_Sector_Code)
 
 ## Read a Julia reference CSV, drop an optional `year` column (filter to yr).
 read_ref <- function(file) {

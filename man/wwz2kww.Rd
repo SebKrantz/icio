@@ -7,12 +7,12 @@
 wwz2kww(x, aggregate = FALSE)
 }
 \arguments{
-\item{x}{a data frame with the WWZ decomposition obtained from \code{\link{wwz}}. Alternatively a 'decompr' class object from \code{\link{load_tables_vectors}} can be supplied, which will toggle calling \code{wwz()} first.}
+\item{x}{a data.table with the WWZ decomposition obtained from \code{\link{wwz}}. Alternatively an 'icio' class object from \code{\link{load_icio}} can be supplied, which will toggle calling \code{wwz()} first.}
 
 \item{aggregate}{logical. \code{TRUE} aggregates the KWW decomposition to the country level, giving exactly the same output as \code{\link{kww}}. \code{FALSE} maintains the sector level decomposition in KWW format.}
 }
 \value{
-A data frame with exports decomposed into 9 components (columns), see the table above and \code{\link{kww}} for a shorter description of the 9 terms.
+A \code{data.table} with exports decomposed into 9 components (columns), see the table above and \code{\link{kww}} for a shorter description of the 9 terms.
 }
 \description{
 This function by default returns a disaggregated version of the the Koopman-Wang-Wei (KWW) decomposition breaking up sector-level gross exports into 9 value added terms,
@@ -36,18 +36,18 @@ conventions followed in this package.
  }
 }
 \note{
-If both WWZ and KWW decompositions are required, it is computationally more efficient to call \code{wwz2kww(x, aggregate = TRUE)} on an already computed WWZ decomposition, than to call \code{\link{kww}} on a 'decompr' object.
+If both WWZ and KWW decompositions are required, it is computationally more efficient to call \code{wwz2kww(x, aggregate = TRUE)} on an already computed WWZ decomposition, than to call \code{\link{kww}} on an 'icio' object.
 }
 \examples{
 
 # Load example data
 data(leather)
 
-# Create intermediate object (class 'decompr')
-decompr_object <- load_tables_vectors(leather)
+# Create intermediate object (class 'icio')
+m <- load_icio(leather)
  
 # Perform the WWZ decomposition
-WWZ <- wwz(decompr_object)
+WWZ <- wwz(m)
 
 # Obtain a disaggregated KWW decomposition
 KWW <- wwz2kww(WWZ)
@@ -57,7 +57,7 @@ wwz2kww(WWZ, aggregate = TRUE)
 
 # Same as running KWW directly, but the former is more efficient 
 # if we already have the WWZ
-kww(decompr_object)
+kww(m)
 }
 \references{
 Koopman, R., Wang, Z., & Wei, S. J. (2014). Tracing value-added and double counting in gross exports. \emph{American Economic Review, 104}(2), 459-94.
@@ -65,7 +65,7 @@ Koopman, R., Wang, Z., & Wei, S. J. (2014). Tracing value-added and double count
 Wang, Zhi, Shang-Jin Wei, and Kunfu Zhu (2013). Quantifying international production sharing at the bilateral and sector levels (No. w19677). \emph{National Bureau of Economic Research}.
 }
 \seealso{
-\code{\link{wwz}}, \code{\link{kww}}, \code{\link{decompr-package}}
+\code{\link{wwz}}, \code{\link{kww}}, \code{\link{icio-package}}
 }
 \author{
 Sebastian Krantz

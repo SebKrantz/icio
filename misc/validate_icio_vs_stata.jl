@@ -1,5 +1,5 @@
 # Validate the Julia GlobalValueChains.jl decompositions against the Stata `icio` reference output
-# for the EMERGING ICIO data. This is the upstream reference that decompr::bm() is in turn checked
+# for the EMERGING ICIO data. This is the upstream reference that icio::bm() is in turn checked
 # against (see validate_bm_emerging.R); GlobalValueChains.jl and bm() agree to ~1e-13, and
 # GlobalValueChains.jl matches Stata to ~1e-7 (the residual is Strassen-inversion vs BLAS-LU
 # rounding, not a method gap).

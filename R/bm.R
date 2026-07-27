@@ -3,10 +3,10 @@
 #' Decomposes gross exports (or imports) into value-added and Global Value Chain (GVC) components
 #' following the Borin and Mancini (2019) framework, as implemented in the Stata \code{icio}
 #' command (Belotti, Borin and Mancini 2021). It is the R counterpart of the \code{decompose()}
-#' function in the Julia package \code{GlobalValueChains.jl}, and operates on a \code{decompr}
-#' object created by \code{\link{load_tables_vectors}}.
+#' function in the Julia package \code{GlobalValueChains.jl}, and operates on an \code{icio}
+#' object created by \code{\link{load_icio}}.
 #'
-#' @param x an object of class \code{decompr} obtained from \code{\link{load_tables_vectors}}.
+#' @param x an object of class \code{icio} obtained from \code{\link{load_icio}}.
 #' @param aggregation character. The level of the decomposition:
 #'  \code{"country"} (one row per exporting/importing country), \code{"sector"} (one row per
 #'  exporting country-industry), or \code{"bilateral"} (one row per exporting country-industry
@@ -76,7 +76,7 @@
 #' the export flow itself, so \code{DVA} (there \eqn{DVA^\star}) is weakly larger than under either
 #' exporter approach.
 #'
-#' @return A \code{data.frame} with one row per unit and one column per value-added term,
+#' @return A \code{data.table} with one row per unit and one column per value-added term,
 #'  preceded by factor identifier columns: \code{Exporting_Country} (country exports);
 #'  \code{Exporting_Country, Exporting_Industry} (sector); \code{Exporting_Country,
 #'  Exporting_Industry, Importing_Country} (bilateral exports); \code{Importing_Country} (country
@@ -91,11 +91,11 @@
 #' Belotti, F., Borin, A. and Mancini, M. (2021). icio: Economic analysis with intercountry
 #' input-output tables. \emph{The Stata Journal, 21}(3), 708-755.
 #' @export
-#' @seealso \code{\link{kww}}, \code{\link{wwz}}, \code{\link{leontief}}, \code{\link{decompr-package}}
+#' @seealso \code{\link{kww}}, \code{\link{wwz}}, \code{\link{leontief}}, \code{\link{icio-package}}
 #' @examples
-#' # Load example data and create a 'decompr' object
+#' # Load example data and create an 'icio' object
 #' data(leather)
-#' dec <- load_tables_vectors(leather)
+#' dec <- load_icio(leather)
 #'
 #' # Country-level decomposition (exporter perspective, source approach; 13 terms)
 #' bm(dec)
@@ -116,8 +116,8 @@ bm <- function(x,
                approach    = c("source", "sink"),
                flow        = c("exports", "imports")) {
 
-  if(!inherits(x, "decompr"))
-    stop("x must be an object of class 'decompr' created by the load_tables_vectors() function.")
+  if(!inherits(x, "icio"))
+    stop("x must be an object of class 'icio' created by the load_icio() function.")
   aggregation <- match.arg(aggregation)
   perspective <- match.arg(perspective)
   approach    <- match.arg(approach)
@@ -158,7 +158,7 @@ bm <- function(x,
     }
   }
 
-  .bm_finalize(res$out, res$nr)
+  .bm_finalize(res$out)
 }
 
 
@@ -169,12 +169,11 @@ bm <- function(x,
 # factor column from integer codes
 .bm_fct <- function(codes, levels) structure(codes, levels = levels, class = "factor")
 
-# finalize a list of columns into a 'bm' data.frame
-.bm_finalize <- function(out, nr) {
+# finalize a list of columns into a 'bm' data.table
+.bm_finalize <- function(out) {
   out <- lapply(out, unname)
-  attr(out, "row.names") <- .set_row_names(nr)
-  class(out) <- "data.frame"
-  attr(out, "decomposition") <- "bm"
+  setDT(out)
+  setattr(out, "decomposition", "bm")
   out
 }
 
@@ -182,7 +181,7 @@ bm <- function(x,
 # with list2env(P, environment()).
 .bm_prep <- function(x) {
 
-  Am <- B <- Bd <- Bm <- L <- Vc <- E <- ESR <- Y <- Yd <- Ym <- X <-
+  A <- B <- Lb <- Vc <- E <- ESR <- Y <- Yd <- Ym <- X <-
     G <- N <- GN <- k <- i <- NULL
   list2env(x, environment())
 
@@ -192,15 +191,25 @@ bm <- function(x,
   idiag   <- cbind(seq_len(GN), ctryvec)              # [j, country(j)] extraction index
   IN      <- diag(N)
 
-  # Full input-coefficient matrix A: decompr stores only Am (foreign A, domestic blocks zeroed).
-  # Recover the domestic blocks from the block-diagonal local Leontief L (L_gg = (I - A_gg)^{-1}).
-  A <- Am
-  for(g in seq_len(G)) { bg <- blk(g); A[bg, bg] <- IN - solve(L[bg, bg]) }
+  # Foreign input coefficients: A with the domestic blocks zeroed. Several engines slice this by
+  # country block, so it is materialized once here.
+  Am <- A
+  for(g in seq_len(G)) { bg <- blk(g); Am[bg, bg] <- 0 }
 
-  ## per-cell value-added multipliers (length GN)
-  VBdom <- colSums2(Bd * Vc)                          # domestic VA multiplier
-  VBfor <- colSums2(Bm * Vc)                          # foreign  VA multiplier
-  VLdom <- colSums2(L  * Vc)                          # local domestic VA multiplier
+  ## Per-cell value-added multipliers (length GN). The domestic ones are block-diagonal products,
+  ## so they are formed from the diagonal blocks of B and the local Leontief blocks Lb -- neither
+  ## Bd, Bm nor a dense L is ever materialized. Wcol = L %*% Yd[idiag] is likewise block-diagonal.
+  VBdom  <- numeric(GN)                               # domestic VA multiplier
+  VLdom  <- numeric(GN)                               # local domestic VA multiplier
+  Wcol   <- numeric(GN)                               # L_rr Y_rr, stacked
+  Yddiag <- Yd[idiag]                                 # domestic final demand per country-sector
+  for(g in seq_len(G)) {
+    bg <- blk(g)
+    VBdom[bg] <- as.vector(Vc[bg] %*% B[bg, bg, drop = FALSE])
+    VLdom[bg] <- as.vector(Vc[bg] %*% Lb[[g]])
+    Wcol[bg]  <- Lb[[g]] %*% Yddiag[bg]
+  }
+  VBfor <- as.vector(Vc %*% B) - VBdom                # foreign VA multiplier
 
   ## exporter/source foreign-VA-once coefficient
   fvacoef <- numeric(GN)
@@ -210,18 +219,18 @@ bm <- function(x,
     fvacoef[bs] <- solve(t(IN + Ms), VBfor[bs])
   }
 
-  Yddiag <- Yd[idiag]                                 # domestic final demand per country-sector
-  Wcol   <- as.vector(L %*% Yddiag)                   # L_rr Y_rr, stacked
-  BFD    <- B %*% Y                                   # output driven by each country's final demand
+  BFD <- B %*% Y                                      # output driven by each country's final demand
 
   list(G = G, N = N, GN = GN, k = k, i = i, Nseq = Nseq, blk = blk, ctryvec = ctryvec,
-       idiag = idiag, IN = IN, A = A, Am = Am, B = B, L = L, Vc = Vc, X = X, E = E, ESR = ESR,
+       idiag = idiag, IN = IN, A = A, Am = Am, B = B, Lb = Lb, Vc = Vc, X = X, E = E, ESR = ESR,
        Y = Y, Yd = Yd, Ym = Ym, VBdom = VBdom, VBfor = VBfor, VLdom = VLdom, fvacoef = fvacoef,
        Wcol = Wcol, BFD = BFD)
 }
 
 # directly-absorbed exports DAE and absorbed-abroad exports VAXE (GN x G), exporter/source
 .bm_dae_vaxe <- function(P) {
+  # NULL-initialised so R CMD check does not flag the list2env() locals as globals
+  Am <- Wcol <- BFD <- X <- Ym <- G <- blk <- idiag <- NULL
   list2env(P, environment())
   DAE  <- Ym
   VAXE <- Ym
@@ -238,6 +247,8 @@ bm <- function(x,
 ## Engine: exporter / source (13 terms), country / sector / bilateral
 ## ------------------------------------------------------------------------------------------------
 .bm_source <- function(P, aggregation) {
+  # NULL-initialised so R CMD check does not flag the list2env() locals as globals
+  ESR <- VBdom <- VBfor <- VLdom <- fvacoef <- G <- N <- GN <- k <- i <- ctryvec <- NULL
   list2env(P, environment())
   ord13 <- c("GEXP","DC","DVA","VAX","DAVAX","REF","DDC","FC","FVA","FDC","GVC","GVCB","GVCF")
 
@@ -285,6 +296,8 @@ bm <- function(x,
 
 # sector-level source terms as a named list of GN-length vectors (13 terms)
 .bm_source_sec <- function(P) {
+  # NULL-initialised so R CMD check does not flag the list2env() locals as globals
+  E <- VBdom <- VBfor <- VLdom <- fvacoef <- NULL
   list2env(P, environment())
   dv <- .bm_dae_vaxe(P); DAE <- dv$DAE; VAXE <- dv$VAXE
   GEXP  <- E
@@ -309,6 +322,8 @@ bm <- function(x,
 ## FVA/FDC change with the world approach (Borin & Mancini 2019, eq. 52 source / eq. 54 sink).
 ## ------------------------------------------------------------------------------------------------
 .bm_world <- function(P, approach) {
+  # NULL-initialised so R CMD check does not flag the list2env() locals as globals
+  A <- Am <- B <- Lb <- Vc <- E <- Ym <- Wcol <- VBfor <- VLdom <- G <- GN <- k <- blk <- ctryvec <- idiag <- NULL
   list2env(P, environment())
   sec <- .bm_source_sec(P)
   agg <- function(v) rowsum(v, ctryvec, reorder = FALSE)[, 1L]
@@ -317,7 +332,9 @@ bm <- function(x,
   if(approach == "sink") {
     ## world/sink foreign VA (eq. 54)
     Yms     <- rowSums2(Ym)
-    Wrex    <- as.vector(L %*% (Yms + as.vector(Am %*% Wcol)))
+    wv      <- Yms + as.vector(Am %*% Wcol)
+    Wrex    <- numeric(GN)                             # L %*% wv, block-diagonal
+    for(g in seq_len(G)) { bg <- blk(g); Wrex[bg] <- Lb[[g]] %*% wv[bg] }
     AsrWrex <- matrix(0, GN, G)
     VBR     <- matrix(0, GN, G)
     for(r in seq_len(G)) {
@@ -334,7 +351,7 @@ bm <- function(x,
     FVA <- numeric(G)
     for(s in seq_len(G)) {
       bs   <- blk(s)
-      etil <- L[bs, bs, drop = FALSE] %*% E[bs]           # L_ss E_s (N-vector)
+      etil <- Lb[[s]] %*% E[bs]                          # L_ss E_s (N-vector)
       w    <- as.vector(A[, bs, drop = FALSE] %*% etil)   # GN-vector
       keep <- ctryvec != s                                # foreign origins only
       FVA[s] <- sum(VLdom[keep] * w[keep])
@@ -353,6 +370,8 @@ bm <- function(x,
 ## Same country perimeter as source; VA recorded the last time it leaves s. DC/FC match source.
 ## ------------------------------------------------------------------------------------------------
 .bm_sink <- function(P, aggregation) {
+  # NULL-initialised so R CMD check does not flag the list2env() locals as globals
+  A <- B <- Lb <- E <- ESR <- X <- Y <- BFD <- VBdom <- VBfor <- G <- N <- GN <- k <- i <- IN <- blk <- ctryvec <- NULL
   list2env(P, environment())
   ABFD <- A %*% BFD
   Yrow <- rowSums2(Y)                                    # GN
@@ -383,7 +402,7 @@ bm <- function(x,
     for(r in seq_len(G)) {
       if(r == s) next
       br  <- blk(r)
-      Lrr <- L[br, br, drop = FALSE]; Arr <- A[br, br, drop = FALSE]; Asr <- A[bs, br, drop = FALSE]
+      Lrr <- Lb[[r]]; Arr <- A[br, br, drop = FALSE]; Asr <- A[bs, br, drop = FALSE]
       Psi  <- Yrow[br] + AXtil[br] - Arr %*% Xtil[br]
       Phi  <- as.vector(Y[bs, r] + Asr %*% (Lrr %*% Psi))                # N
       Psir <- Y[br, s] + AXtil_s[br] - Arr %*% Xtil_s[br]
@@ -439,6 +458,8 @@ bm <- function(x,
 ## FVA* = VBfor/(1+a) e; VAX* = (DVA*/e) VAXE (perimeter-invariant reflection share). 9 terms.
 ## ------------------------------------------------------------------------------------------------
 .bm_self <- function(P, aggregation) {
+  # NULL-initialised so R CMD check does not flag the list2env() locals as globals
+  A <- B <- E <- ESR <- X <- Y <- BFD <- VBdom <- VBfor <- G <- N <- GN <- k <- i <- IN <- blk <- ctryvec <- NULL
   list2env(P, environment())
 
   if(aggregation == "sector") {
@@ -510,6 +531,8 @@ bm <- function(x,
 ## and bilateral (va/dc by value-added origin). Column-block Woodbury update of B per importer.
 ## ------------------------------------------------------------------------------------------------
 .bm_imports <- function(P, aggregation) {
+  # NULL-initialised so R CMD check does not flag the list2env() locals as globals
+  A <- B <- ESR <- Vc <- G <- GN <- k <- IN <- blk <- NULL
   list2env(P, environment())
   BESR <- B %*% ESR                                     # GN x G, BESR[,r] = B d^r
   va <- matrix(0, GN, G); dc <- matrix(0, GN, G)
