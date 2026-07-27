@@ -62,7 +62,8 @@ All decompositions return a `data.table`. See `vignette("icio")` for a detailed 
 
 ## Related
 
-- [GlobalValueChains.jl](https://github.com/SebKrantz/GlobalValueChains.jl) — the Julia counterpart; `bm()` mirrors its `decompose()`.
+- [`icio`](https://www.tradeconomics.com/icio/) (Stata) — the reference implementation of the Borin-Mancini decompositions, by Belotti, Borin & Mancini (2021), and the origin of this package's name. `bm()` reproduces its output; its `perspective()` and `approach()` options map onto the arguments of the same name here.
+- [GlobalValueChains.jl](https://github.com/SebKrantz/GlobalValueChains.jl) (Julia) — the counterpart to this package; `bm()` mirrors its `decompose()`.
 - **icio** is derived from the CRAN package [decompr](https://cran.r-project.org/package=decompr), which is no longer maintained.
 
 ## References
