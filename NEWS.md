@@ -1,186 +1,82 @@
-decompr 8.0.0
+icio 1.0.0
 =======================
 
-**Breaking change**: the 'decompr' object returned by `load_tables_vectors()` has been reduced.
-It carried five dense `GN x GN` matrices, but only two of them held independent information --
-`Am`, `Bd`, `Bm` and `L` were masked or block-diagonal copies of the input coefficients and of the
-Leontief inverse. `Bd` and `L` were additionally stored dense despite being block-diagonal, so at
-`G` countries they were `1 - 1/G` structural zeros (98% at `G = 50`).
+First release of **icio**, a rename and consolidation of the CRAN package
+[**decompr**](https://cran.r-project.org/package=decompr) (Quast and Kummritz 2015), whose
+original maintainer is no longer active. The package is now maintained by
+[Sebastian Krantz](https://github.com/SebKrantz), a co-author of later **decompr** versions,
+at <https://github.com/SebKrantz/icio>. **decompr**'s version history ended at 8.0.0; **icio**
+starts fresh at 1.0.0 and keeps no backwards compatibility with it. Everything below is
+relative to `decompr 8.0.0`.
 
-* The object now stores the **full** input coefficient matrix `A` (previously only `Am`, with the
-  domestic blocks zeroed, was kept -- which forced `bm()` to reconstruct `A` on every call) and the
-  domestic Leontief inverse as the list `Lb` of the `G` local `N x N` blocks it consists of, rather
-  than as a dense `GN x GN` matrix. The fields `Am`, `Bd`, `Bm`, `L`, `Eint`, `Efd` and `rownam`
-  were removed; `rownam` was not used by any decomposition and is still available as
-  `names(x$Vc)`. `A`, `B`, `Lb`, `E`, `ESR`, `Vc`, `G`, `N`, `GN`, `k`, `i`, `X`, `Y`, `Yd` and
-  `Ym` are unchanged or new. See `?load_tables_vectors` for how to recover the removed fields.
+### Loading ICIO tables
 
-* The decomposition functions derive whatever masked forms they need. `leontief()`, `kww()` and
-  `bm()` now work entirely off the diagonal blocks of `B` and off `Lb`, without ever materializing
-  a dense `Bd`, `Bm` or `L`. `wwz()`, which uses the masked matrices in dense products throughout,
-  rebuilds `Am`, `Bd` and `Bm` on entry.
+* `load_tables_vectors()` is replaced by **`load_icio()`**, which returns an object of class
+  **`icio`** (previously `decompr`). Its arguments are named after the elements of an `iot`
+  table -- `inter`, `final`, `countries`, `industries`, `output`, `va` -- rather than
+  `x, y, k, i, o, v`. An `iot`-class list such as `data(leather)` is detected automatically
+  when passed as the first argument, so there is no separate `iot` argument:
+  `load_icio(leather)` and `load_icio(inter, final, countries, industries)` both work.
 
-* `kww()` is **substantially faster**: re-associating `Bm %*% Am %*% L %*% Z` as
-  `Bm %*% (Am %*% (L %*% Z))`, with `Z` having only `G` columns, removes two `GN x GN x GN` matrix
-  products. On a 2000 x 2000 table it went from 10.3 to 0.6 seconds. A dead `Vc * B` allocation was
-  also removed.
+* New **`load_icio_csv()`** reads the CSV format of the Stata `icio` command -- a headerless
+  `GN x (GN + G)` matrix `[inter | final]` plus a one-column country-list file -- via
+  `data.table::fread()`. Industry codes may be given as a vector, as a path to a one-column
+  CSV, or omitted (defaulting to `sector1 ... sectorN`). This mirrors `read_icio_csv()` in
+  [GlobalValueChains.jl](https://github.com/SebKrantz/GlobalValueChains.jl).
 
-* `load_tables_vectors()` is faster and allocates far less: the block-diagonal `L` is obtained from
-  `G` small solves instead of one dense `solve(I - Ad)` (two orders of magnitude cheaper for an
-  identical result), exports by destination are assembled from `x` and `Y` directly instead of from
-  a masked `cbind(x, y)` copy, and forming `I - A` in place avoids a `GN x GN` identity matrix.
+* Fixed: an output vector supplied through an `iot` object was silently ignored, because the
+  loader looked for the element `output` while `data(leather)` and the `iot` documentation
+  call it `out` (R's partial matching does not bridge the two). Both names are now accepted,
+  as is an optional `va` element.
 
-  On a 50-country, 40-industry table the object went from 160 MB to 66 MB and construction from
-  5.2 to 4.1 seconds. All decompositions reproduce their 7.0.0 results to within 3e-12 relative.
+* The object itself is unchanged from `decompr 8.0.0`: `A`, `B`, `Lb`, `E`, `ESR`, `Vc`, `G`,
+  `N`, `GN`, `k`, `i`, `X`, `Y`, `Yd`, `Ym`. Only `A` and `B` are dense `GN x GN` matrices;
+  the masked and block-diagonal variants the decompositions need are derived on the fly.
 
-* The complimentary 'gvc' package is unaffected: it only uses `G`, `N`, `GN`, `k`, `i` and `X`.
+### Running decompositions
 
-decompr 7.0.0
-=======================
-* Added the Borin-Mancini (2019) decomposition via the new `bm()` function (also available
-  through `decomp(method = "bm")`). It decomposes gross exports into up to 13 value-added and
-  GVC terms at the country, sector, or bilateral-sector level, and covers the full set of Stata
-  `icio` perspectives and approaches:
-  - `perspective = "exporter"` with `approach = "source"` (13 terms) or `approach = "sink"`
-    (9 terms; the bilateral level adds `VAXIM`, the domestic VA absorbed by the direct importer);
-  - `perspective = "world"` (country level) with `approach = "sink"` (corrected KWW) or
-    `approach = "source"` (9 terms);
-  - `perspective = "self"` (sector or bilateral level), the export flow's own perimeter giving
-    the broader Johnson (2018) / Los et al. (2016) domestic value added (9 terms); and
-  - `flow = "imports"`, an importer-perspective decomposition of gross imports into value added
-    and double counting (`GIMP = VA + DC`), at the country level or by value-added origin.
+* `decomp()` now takes an `icio` object (or a list of them) instead of raw tables, so the
+  expensive construction step is always explicit and reusable. Its default `method` is
+  `"bm"`, the recommended decomposition.
 
-  It is the R counterpart of `decompose()` in the Julia package `GlobalValueChains.jl` (formerly
-  `ICIO.jl`), reproduces the Stata `icio` command's output, and agrees with the Julia
-  implementation to machine precision on real ICIO tables.
-* The `kww()` documentation now notes that the KWW decomposition is biased (it systematically
-  underestimates foreign value added) and points to `bm(perspective = "world", approach = "sink")`
-  for the Borin-Mancini correction. Cross-references to `bm()` were added throughout.
-* New pkgdown website at https://bquast.github.io/decompr/, and updated [package vignette](https://bquast.github.io/decompr/articles/decompr.html).
-* These edits were made by [Sebastian Krantz](https://github.com/SebKrantz), who is now also a package author.
+* Given a **list of `icio` objects** -- typically one ICIO table per year -- `decomp()` runs
+  the decomposition on each and stacks the results with `data.table::rbindlist()`, prepending
+  an identifier column named by `idcol` (default `"Label"`, `NULL` to omit). This mirrors the
+  `Dict` method of `decompose()` in GlobalValueChains.jl.
 
-decompr 6.4.0
-=======================
-* redo documentation
-* small general fixes
-* add ORCID
+* **All decompositions now return a `data.table`** rather than a `data.frame`. Note that
+  `d[, "GEXP"]` returns a one-column table rather than a vector, and `d[c("GEXP", "DVA")]` is
+  a join rather than a column subset -- use `d$GEXP`, `d[, .(GEXP, DVA)]`, or
+  `as.data.frame(d)` for base-R semantics. `data.table` is a new dependency.
 
+* `bm()`, `leontief()`, `kww()`, `wwz()` and `wwz2kww()` are otherwise unchanged, including
+  their arguments and term names.
 
-decompr 6.2.0
-=======================
-* documentation updates
+* Fixed: 34 roxygen lines in `wwz()`'s documentation used a typographic apostrophe (`#’`)
+  instead of `#'` and were therefore silently dropped, leaving the help page without its
+  `@return` section describing the 16 terms.
 
+### Removed
 
-decompr 6.0.0
-=======================
-* Added Koopman-Wang-Wei (KWW) decompositon and function to aggregate WWZ to KWW decomposition
-* 2x performance improvement through C-code and matrixStats dependency
-* Improved code security through additional checks
-* Enhanced documentation providing more details about methods and resulting objects
+* The RStudio addin (`decomp_gadget()`) and its `addins.dcf`, the deprecated `load_tables()`
+  interface, the unused `tiva()` stub, the `kww_example` / `kww_experimental` scratch files,
+  and the package startup message.
 
-decompr 5.2.0
-=======================
-* documentation redone
+* The `gvc` package is no longer suggested; it was not used by any test, example or vignette.
 
+---
 
-decompr 4.5.0
-=======================
-* code refactoring
-* added v
+The four decompositions themselves are unchanged and continue to implement:
 
-decompr 4.1.0
-=======================
-* fix post multiplication "final_demand" of leontief()
+| Function | Method | Level | Terms |
+|----------|--------|-------|-------|
+| `bm()` | Borin & Mancini (2019) | country / sector / bilateral | up to 13 |
+| `leontief()` | Hummels, Ishii & Yi (2001) | country x industry | continuous VA origin |
+| `kww()` | Koopman, Wang & Wei (2014) | country | 9 |
+| `wwz()` | Wang, Wei & Zhu (2013) | bilateral country x sector | 16 |
 
-decompr 4.0.0
-=======================
-* add post-multiplication argument to leontief method
-* remove leontief_output(), functionality moved to leontief()
-* use ellipsis for decomp function
-
-decompr 3.0.0
-=======================
-* remove vertical_specialisation and vertical_specialization, will be included in gvc package
-* add some attributes to output t.b. used by gvc package
-* change the output format of leontief and leontief-output to long form (tidy data)
-* add columns country and sectors names
-* add DViX_Fsr to wwz
-* add Vignette (decompr)
-* add tests
-* add Travis-CI support
-* add coveralls.io support
-
-decompr 2.1.0
-=======================
-* add a leontief_output decomposition method
-* update the README.md file
-* add warning when no method is specified in decomp (default is Leontief as of v.2)
-
-decompr 2.0.0
-=======================
-* make load_tables_vectors default
-* change notice to reflect new default
-* update examples and data to reflect lt
-* replace use of 2 dimensional arrays with matrices
-* more efficient construction of rownam and z1
-* replace use of length(k) with G
-* replace use of various inefficient uses of diag() (e.g. with Vhat)
-* improved spacing of code for legibility
-* make leontief default method
-
-decompr 1.3.2
-=======================
-* add notice
-
-decompr 1.3.1
-=======================
-* fix citations etc.
-
-decompr 1.3.0
-=======================
-* add load_tables_vectors to input in simple form
-
-decompr 1.2.1
-=======================
-* update authors
-
-decompr 1.2.0
-=======================
-* update citation code
-* use " in stead of ' in examples and function arguments
-* use match.arg for method in decomp function
-
-decompr 1.1.0
-=======================
-* update references
-* include more descriptive description
-
-decompr 1.0.2
-=======================
-* update example data to regional tables for faster computations
-* put back examples for non-decomp functions
-
-decompr 1.0.1
-=======================
-* remove examples other than for **decomp** function, to pass CRAN test in time
-* add cran-comments.md
-
-decompr 1.0.0
-=======================
-* functions names use underscores in stead of periods
-* method names use underscores in stead of periods
-* examples reflect the above changes
-* WIOD data set is now compressed using bzip2
-* included this news file
-
-decompr 0.7.0
-=======================
-* citation information is included
-
-decompr 0.6.0
-=======================
-* example data set in included
-
-decompr 0.5.0
-=======================
-* examples are included
+`bm()` covers the full set of Stata `icio` perspectives and approaches (exporter/world/self,
+source/sink, exports/imports), is the R counterpart of `decompose()` in
+GlobalValueChains.jl, and agrees with it to machine precision on real ICIO tables. Its
+`perspective = "world", approach = "sink"` variant is the Borin-Mancini correction to the
+biased KWW decomposition.
