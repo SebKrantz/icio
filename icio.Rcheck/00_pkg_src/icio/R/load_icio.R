@@ -257,28 +257,16 @@ load_icio <- function(inter, final, countries, industries, output = NULL, va = N
 #' @export
 #' @seealso \code{\link{load_icio}}, \code{\link{decomp}}, \code{\link{icio-package}}
 #' @examples
-#' # Write the example table out in the 'icio' CSV format: a headerless
-#' # GN x (GN + G) matrix [inter | final], plus a one-column country list
-#' data(leather)
-#' tbl <- tempfile(fileext = ".csv")
-#' cls <- tempfile(fileext = ".csv")
-#' write.table(cbind(leather$inter, leather$final), tbl,
-#'             sep = ",", row.names = FALSE, col.names = FALSE)
-#' write.table(leather$countries, cls,
-#'             sep = ",", row.names = FALSE, col.names = FALSE, quote = FALSE)
+#' \dontrun{
+#' # A table exported for the Stata 'icio' command, together with its country list
+#' m <- load_icio_csv("EM_2015.csv", "EM_countrylist.csv")
 #'
-#' # Read it back: industries default to "sector1", ..., "sectorN"
-#' m <- load_icio_csv(tbl, cls)
-#' str(m$i)
+#' # Supplying the real sector codes so they appear in the results
+#' m <- load_icio_csv("EM_2015.csv", "EM_countrylist.csv",
+#'                    industries = c("AFF", "MIN", "MAN"))
 #'
-#' # Supplying the real industry codes so they appear in the results
-#' m <- load_icio_csv(tbl, cls, industries = leather$industries)
-#' decomp(m, aggregation = "sector")
-#'
-#' # The country list may also be given directly as a character vector
-#' m <- load_icio_csv(tbl, leather$countries, industries = leather$industries)
-#'
-#' unlink(c(tbl, cls))
+#' decomp(m, aggregation = "bilateral")
+#' }
 
 load_icio_csv <- function(table, countries, industries = NULL, output = NULL, va = NULL, ...) {
 

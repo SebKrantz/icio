@@ -1,0 +1,18 @@
+bibentry(bibtype     = "Manual",
+         title       = "icio: Global Value Chain Decomposition of Inter-Country Input-Output Tables",
+         author      = c(person("Sebastian", "Krantz"),
+                         person("Bastiaan", "Quast")),
+         year        = "2026",
+         note        = "R package version 1.0.0",
+         url         = "https://github.com/SebKrantz/icio",
+         textVersion = paste("Krantz, S. and B. Quast (2026).",
+                             "icio: Global Value Chain Decomposition of Inter-Country Input-Output Tables.",
+                             "R package version 1.0.0. https://github.com/SebKrantz/icio"),
+
+         mheader     = "To cite icio in publications please use:",
+
+         mfooter     = paste("The Borin-Mancini decomposition implemented in bm() follows",
+                             "Borin and Mancini (2019) and the Stata 'icio' command",
+                             "(Belotti, Borin and Mancini 2021); please cite these as well",
+                             "when using it. See also 'citation()' for citing R.")
+)

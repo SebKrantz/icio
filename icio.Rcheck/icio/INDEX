@@ -1,0 +1,13 @@
+bm                      Borin-Mancini Decomposition of Gross Exports
+                        and Imports
+decomp                  Run a GVC Decomposition
+icio-package            Global Value Chain Decomposition of
+                        Inter-Country Input-Output Tables
+kww                     Koopman-Wang-Wei Decomposition of Gross Exports
+leather                 Leather Example ICIO Data
+leontief                Leontief Decomposition
+load_icio               Load an Inter-Country Input-Output Table
+load_icio_csv           Load an ICIO Table from the 'icio' CSV Format
+wwz                     Wang-Wei-Zhu Decomposition of Gross Exports
+wwz2kww                 Koopman-Wang-Wei from Wang-Wei-Zhu
+                        Decomposition

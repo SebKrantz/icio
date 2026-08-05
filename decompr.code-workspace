@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../Data/EMERGING"
+		},
+		{
+			"path": "../../Julia/ICIO.jl"
+		}
+	],
+	"settings": {}
+}

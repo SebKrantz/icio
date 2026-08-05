@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
   comment  = "#>",
   fig.width = 7
 )
-oldopts <- options(width = 90)   # restored at the end of the vignette
+options(width = 90)
 ```
 
 **icio** implements four gross-export decompositions from the Global Value Chain (GVC)
@@ -265,7 +265,3 @@ at the bilateral and sector levels*. NBER Working Paper 19677.
 
 Hummels, D., Ishii, J., & Yi, K.-M. (2001). The nature and growth of vertical
 specialization in world trade. *Journal of International Economics, 54*(1), 75–96.
-
-```{r cleanup, include=FALSE}
-options(oldopts)
-```
