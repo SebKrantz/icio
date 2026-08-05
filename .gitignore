@@ -11,3 +11,9 @@ kww_experimental.R
 
 .DS_Store
 docs/
+
+# R CMD check output and build artifacts
+*.Rcheck/
+*.tar.gz
+# editor workspace files
+*.code-workspace
