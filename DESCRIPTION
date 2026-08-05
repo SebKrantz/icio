@@ -17,7 +17,8 @@ Description: Four global value chain (GVC) decompositions of gross exports
     <doi:10.1177/1536867X211045573>.
 Authors@R: c(
          person("Sebastian", "Krantz", role = c("aut", "cre"),
-                email = "sebastian.krantz@graduateinstitute.ch"),
+                email = "sebastian.krantz@graduateinstitute.ch",
+                comment = c(ORCID = "0000-0001-6212-5229")),
          person("Bastiaan", "Quast", role = "aut",
                 email = "bquast@gmail.com", comment = c(ORCID = "0000-0002-2951-3577")),
          person("Fei", "Wang", role = "aut"),
