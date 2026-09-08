@@ -15,7 +15,7 @@
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/SebKrantz/icio/blob/master/inst/CITATION)
+[`inst/CITATION`](https://github.com/SebKrantz/icio/blob/v1.0.0/inst/CITATION)
 
 Krantz, S. and B. Quast (2026). icio: Global Value Chain Decomposition
 of Inter-Country Input-Output Tables. R package version 1.0.0.
