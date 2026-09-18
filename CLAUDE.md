@@ -43,8 +43,11 @@ roxygen block above the function and re-run `devtools::document()`. Renaming any
 `useDynLib` touches requires `rm src/*.o src/*.so && pkgbuild::compile_dll(force = TRUE)`;
 `make` alone will report "Nothing to be done" because the stale `.o` is newer than the `.c`.
 
-CI (`.github/workflows/`): `R-CMD-check` on Windows/macOS(release+devel)/Ubuntu, `test-coverage`,
-and `pkgdown` deploy — all on push/PR to `master`.
+CI (`.github/workflows/`): `R-CMD-check` on Windows/macOS (release) and Ubuntu (release+devel),
+`test-coverage`, and `pkgdown` deploy — all on push/PR to `master`; `R-CMD-check` and `pkgdown`
+can also be started manually (`workflow_dispatch`). R-devel is tested on Ubuntu rather than macOS
+because CRAN ships no macOS binaries for devel, so every dependency builds from source there and
+`data.table` fails on the missing `libintl.h`.
 
 ## Architecture
 
