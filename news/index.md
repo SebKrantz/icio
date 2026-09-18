@@ -2,6 +2,8 @@
 
 ## icio 1.0.0
 
+CRAN release: 2026-09-07
+
 First release of **icio**, a rename and consolidation of the CRAN
 package [**decompr**](https://cran.r-project.org/package=decompr) (Quast
 and Kummritz 2015), whose original maintainer is no longer active. The
